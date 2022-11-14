@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "aad-auth-proxy.fullname" . }}-test-connection"
+  labels:
+    {{- include "aad-auth-proxy.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "aad-auth-proxy.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

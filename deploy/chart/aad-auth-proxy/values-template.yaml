@@ -1,0 +1,93 @@
+# Default values for aad-auth-proxy.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+listeningPort: 8081
+audience: https://prometheus.monitor.azure.com
+targetHost: ""
+identityType: systemAssigned
+aadClientId: ""
+aadTenantId: ""
+aadClientCertificatePath: ""
+
+replicaCount: 1
+
+image:
+  # TODO: Change this to mcr, when ready
+  repository: ${MCR_REGISTRY}${MCR_REPOSITORY}
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ${IMAGE_TAG}
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 128Mi
+  requests:
+    cpu: 250m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - labelSelector:
+          matchExpressions:
+            - key: kubernetes.io/os
+              operator: In
+              values:
+                - linux
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64
+            - key: type
+              operator: NotIn
+              values:
+                - virtual-kubelet
+# The following label selector is removed for AKS, this is only required for non AKS
+            - key: kubernetes.io/role
+              operator: NotIn
+              values:
+                - master

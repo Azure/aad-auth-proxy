@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aad-auth-proxy.fullname" . }}
+  labels:
+    {{- include "aad-auth-proxy.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "aad-auth-proxy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "aad-auth-proxy.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "aad-auth-proxy.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.listeningPort }}
+              protocol: TCP
+          env:
+            - name: AUDIENCE
+              value: {{ required "audience is required" .Values.audience | toString | trim | quote }}
+            - name: TARGET_HOST
+              value: {{ required "targetHost is required" .Values.targetHost | toString | trim | lower | quote }}
+            - name: LISTENING_PORT
+              value: {{ required "listeningPort is required" .Values.listeningPort | toString | trim | quote }}
+            - name: IDENTITY_TYPE
+              value: {{ required "identityType is required, should be one of systemAssigned, userAssigned or aadApplication" .Values.identityType | toString | trim | quote }}
+            {{- if ne .Values.identityType "systemAssigned" }}
+            - name: AAD_CLIENT_ID
+              value: {{ required "aadClientId is required for userAssigned and aadApplication identity types" .Values.aadClientId | toString | trim | quote }}
+            {{- if eq .Values.identityType "aadApplication" }}
+            - name: AAD_TENANT_ID
+              value: {{ required "aadTenantId is required for aadApplication identity type" .Values.aadTenantId | toString | trim | quote }}
+            - name: AAD_CLIENT_CERTIFICATE_PATH
+              value: {{ required "aadClientCertificatePath is required for aadApplication identity type" .Values.aadClientCertificatePath | toString | trim | quote }}
+            {{- end}}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

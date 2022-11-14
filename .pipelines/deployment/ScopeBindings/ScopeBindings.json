@@ -1,0 +1,51 @@
+{
+  "$schema": "https://ev2schema.azure.net/schemas/2020-01-01/scopeBindings.json",
+  "contentVersion": "0.0.0.1",
+  "scopeBindings": [       
+      {
+          "scopeTagName": "Global",
+          "bindings": [        
+              {
+                  "find": "__DESTINATION_ACR_NAME__",
+                  "replaceWith": "$(DestinationACRName)"
+              },
+              {
+                "find": "__DESTINATION_REPO_NAME__",
+                "replaceWith": "$(DestinationRepoName)"
+              },            
+              {
+                  "find": "__AGENT_RELEASE__",
+                  "replaceWith": "$(AgentRelease)"
+              }, 
+              {
+                  "find": "__BUILD_VERSION__",
+                  "replaceWith": "$(Build.BuildNumber)"
+              },
+              {
+                "find": "__BUILD_SOURCE_VERSION__",
+                "replaceWith": "$(Build.SourceVersion)"
+              },
+              {
+                "find": "__BUILD_SOURCE_BRANCH_VERSION__",
+                "replaceWith": "$(Build.SourceBranchName)"
+              },
+              {
+                  "find": "__MANAGED_IDENTITY__",
+                  "replaceWith": "$(ManagedIdentity)"
+              }, 
+              {
+                  "find": "__BUILD_ACR__",
+                  "replaceWith": "$(BuildACR)"
+              },
+              {
+                  "find": "__BUILD_REPO_NAME__",
+                  "replaceWith": "$(BuildRepoName)"
+              },
+              {
+                "find": "__BUILD_TAG__",
+                "replaceWith": "$(BuildTag)"
+            }
+          ]
+      }                                                                                                                                                
+  ]
+}
