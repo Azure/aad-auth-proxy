@@ -1,0 +1,51 @@
+﻿{
+  "$schema": "https://ev2schema.azure.net/schemas/2020-01-01/serviceModel.json",
+  "contentVersion": "1.0.0.2",
+    "ServiceMetadata": {
+      "ServiceGroup": "AADAuthProxy",
+      "Environment": "Prod"
+    },
+    "ServiceResourceGroupDefinitions": [
+      {
+        "Name": "AAD-Auth-Proxy-ServiceResourceGroupDefinition",
+        "ServiceResourceDefinitions": [
+          {
+            "Name": "ShellExtension",
+            "ComposedOf": {
+              "Extension": {
+                "Shell": [
+                  {
+                    "type": "ShellExtensionType",
+                    "properties": {
+                      "imageName": "adm-ubuntu-1804-l",
+                      "imageVersion": "v18"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "ServiceResourceGroups": [     
+      {
+        "AzureResourceGroupName": "AAD-Auth-Proxy-Release",
+        "Location": "eastus2",
+        "InstanceOf": "AAD-Auth-Proxy-ServiceResourceGroupDefinition",
+        "AzureSubscriptionId": "11a2995a-a312-4638-96b2-42c84c1e8ca1",  
+        "ScopeTags": [
+          {
+            "Name": "Global"
+          }
+        ],     
+        "ServiceResources": [
+          {
+            "Name": "PushLinuxAgent",
+            "InstanceOf": "ShellExtension",
+            "RolloutParametersPath": "Parameters\\Parameters.json"
+          }
+        ]
+      }                                                                                                 
+    ]
+  } 

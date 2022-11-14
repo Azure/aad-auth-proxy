@@ -8,6 +8,7 @@ import (
 	"aad-auth-proxy/telemetry"
 	"aad-auth-proxy/token_provider"
 	"aad-auth-proxy/utils"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -82,6 +83,10 @@ func createHandlerWithTokenProvider(configuration utils.IConfiguration, audience
 }
 
 func createReverseProxy(targetHost string, tokenProvider contracts.ITokenProvider) (*httputil.ReverseProxy, error) {
+	if targetHost == "" {
+		return nil, errors.New("targetHost path cannot be empty")
+	}
+
 	url, err := url.Parse(targetHost)
 	if err != nil {
 		return nil, err
@@ -115,7 +120,7 @@ func modifyResponse(response *http.Response) (err error) {
 		"StatusCode":    response.StatusCode,
 		"Status":        response.Status,
 		"ContentLength": response.ContentLength,
-	}).Infoln("Successfully send request, returning response back.")
+	}).Infoln("Successfully sent request, returning response back.")
 
 	// If server returned error, log response as well
 	if response.StatusCode >= http.StatusBadRequest {

@@ -3,18 +3,16 @@ package constants
 const (
 	// Http
 	HTTPS_SCHEME = "https"
+	HTTP_PREFIX  = "http://"
+	HTTPS_PREFIX = "https://"
 
 	// Request Headers
 	HEADER_AUTHORIZATION = "Authorization"
 
 	// Identity
-	SYSTEM_ASSIGNED = "systemAssigned"
-	USER_ASSIGNED   = "userAssigned"
-	AAD_APPLICATION = "aadApplication"
-
-	// Host
-	AUDIENCE    = "https://monitor.azure.com/"
-	TARGET_HOST = "https://monitor.azure.com/"
+	SYSTEM_ASSIGNED = "systemassigned"
+	USER_ASSIGNED   = "userassigned"
+	AAD_APPLICATION = "aadapplication"
 
 	// Error Response Headers
 	ERROR_PROPERTY_CODE    = "code"

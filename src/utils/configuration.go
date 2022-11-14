@@ -3,6 +3,7 @@ package utils
 import (
 	"aad-auth-proxy/constants"
 	"os"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -67,6 +68,8 @@ func readConfigurationsFromEnv() *configuration {
 	identityType := os.Getenv("IDENTITY_TYPE")
 	listeningPort := os.Getenv("LISTENING_PORT")
 
+	identityType = strings.ToLower(identityType)
+
 	identityConfig := &identityConfiguration{
 		identityType:             identityType,
 		aadClientId:              aadClientId,
@@ -76,13 +79,9 @@ func readConfigurationsFromEnv() *configuration {
 
 	// Auth
 	audience := os.Getenv("AUDIENCE")
-	if audience == "" {
-		audience = constants.AUDIENCE
-	}
 	targetHost := os.Getenv("TARGET_HOST")
-	if targetHost == "" {
-		targetHost = constants.TARGET_HOST
-	}
+	// Trim https:// and http:// prefixes, as the scheme will be added to the modified host url
+	targetHost = strings.TrimPrefix(strings.TrimPrefix(strings.ToLower(targetHost), constants.HTTPS_PREFIX), constants.HTTP_PREFIX)
 
 	hostConfig := &hostConfiguration{
 		audience:   audience,

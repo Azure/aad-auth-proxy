@@ -1,0 +1,68 @@
+{
+    "$schema": "http://schema.express.azure.com/schemas/2015-01-01-alpha/RolloutParameters.json",
+    "contentVersion": "1.0.0.0",
+    "shellExtensions": [
+      {
+        "name": "PushAgentToACR",
+        "type": "ShellExtensionType",
+        "properties": {
+          "maxexecutiontime": "PT1H"
+        },
+        "package": {
+          "reference": {
+            "path": "artifacts.tar.gz"
+          }
+        },
+        "launch": {
+          "command": [
+            "/bin/bash",
+            "pushAgentToAcr.sh"
+          ],
+          "environmentVariables": [
+            {
+              "name": "DESTINATION_ACR_NAME",
+              "value": "__DESTINATION_ACR_NAME__"
+            },
+            {
+              "name": "AGENT_RELEASE",
+              "value": "__AGENT_RELEASE__"
+            },
+            {
+              "name": "BUILD_VERSION",
+              "value": "__BUILD_VERSION__"
+            },
+            {
+              "name": "BUILD_SOURCE_VERSION",
+              "value": "__BUILD_SOURCE_VERSION__"
+            },
+            {
+              "name": "BUILD_SOURCE_BRANCH_VERSION",
+              "value": "__BUILD_SOURCE_BRANCH_VERSION__"
+            },
+            {
+              "name": "AGENT_IMAGE_FULL_PATH",
+              "value": "__DESTINATION_REPO_NAME__/__AGENT_RELEASE__:__AGENT_RELEASE__-__BUILD_VERSION__"
+            }, 
+            {
+              "name": "BUILD_ACR",
+              "value": "__BUILD_ACR__"
+            },
+            {
+              "name": "BUILD_REPO_NAME",
+              "value": "__BUILD_REPO_NAME__"
+            },
+            {
+              "name": "BUILD_TAG",
+              "value": "__BUILD_TAG__"
+            }
+          ], 
+          "identity": {
+            "type": "userAssigned",
+            "userAssignedIdentities": [
+              "__MANAGED_IDENTITY__"
+            ]
+          }
+        }
+      }
+    ]
+  }
