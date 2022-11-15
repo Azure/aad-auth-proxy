@@ -25,7 +25,7 @@ jobs:
 - job: Common
   displayName: Set image tags and publish Ev2 artifacts
   pool:
-    name: Azure-Pipelines-CI-Test-EO
+    name: Azure Pipelines
   steps:
     - bash: |
         if [ $(IS_PR) == "True" ]; then
@@ -81,7 +81,7 @@ jobs:
 - job: Build
   displayName: Build image
   pool:
-    name: Azure-Pipelines-CI-Test-EO
+    name: Azure Pipelines
   dependsOn: common
   variables:
     LINUX_FULL_IMAGE_NAME: $[ dependencies.common.outputs['setup.FULL_IMAGE_NAME'] ]
@@ -200,7 +200,7 @@ jobs:
 - job: Chart
   displayName: "Package helm chart"
   pool:
-    name: Azure-Pipelines-CI-Test-EO
+    name: Azure Pipelines
   dependsOn:
   - Common
   - Build
