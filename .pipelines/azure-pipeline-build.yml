@@ -84,7 +84,7 @@ jobs:
     name: Azure Pipelines
   dependsOn: common
   variables:
-    LINUX_FULL_IMAGE_NAME: $[ dependencies.common.outputs['setup.FULL_IMAGE_NAME'] ]
+    FULL_IMAGE_NAME: $[ dependencies.common.outputs['setup.FULL_IMAGE_NAME'] ]
   steps:
 
     - task: CodeQL3000Init@0
@@ -157,10 +157,10 @@ jobs:
         docker buildx use testbuilder
         docker login $(ACR_REGISTRY) -u $(ACR_USERNAME) -p $(ACR_PASSWORD)
         if [ "$(Build.Reason)" != "PullRequest" ]; then
-          docker buildx build . --file ../Dockerfile -t $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --push
+          docker buildx build . --file ../Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --push
           docker pull $(FULL_IMAGE_NAME)
         else
-          docker buildx build . --file ./Dockerfile -t $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --load
+          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --load
         fi
       workingDirectory: $(Build.SourcesDirectory)/src/
       displayName: "Build: build and push image to dev ACR"
