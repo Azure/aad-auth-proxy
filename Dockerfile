@@ -1,10 +1,21 @@
-FROM golang:1.19.3-alpine3.16
+FROM mcr.microsoft.com/oss/busybox/busybox:1.33.1 as builder
 
-RUN mkdir /app
-ADD src/ /app
-WORKDIR /app
-ENV CGO_ENABLED=0
+FROM cblmariner.azurecr.io/distroless/minimal:2.0
 
-RUN go build -o main .
+# Copy static shell into base image.
+COPY --from=builder /bin/sh /bin/sh
 
-CMD ["/app/main"]
+# Copy mkdir executable
+COPY --from=builder /bin/mkdir /bin/mkdir
+COPY --from=builder /bin/tar /bin/tar
+
+
+RUN mkdir /build
+WORKDIR /build
+
+# Copy the tar file to image and extract it
+COPY src/aad-auth-proxy.tar .
+RUN tar xvf aad-auth-proxy.tar
+
+# execute command when docker launches / run
+CMD ["/build/main"]

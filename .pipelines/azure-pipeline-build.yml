@@ -116,12 +116,14 @@ jobs:
         echo Building and compiling aad-auth-proxy
         # Install golang.
         # https://golang.org/doc/install#install
-        wget -nv -c https://go.dev/dl/go1.19.2.linux-amd64.tar.gz
-        [ -d /usr/local/go ] && rm -rf /usr/local/go
-        tar -C /usr/local -xzf go1.19.2.linux-amd64.tar.gz
+        mkdir -p $(Build.SourcesDirectory)/go19/
+        wget -nv -c https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+        tar -C $(Build.SourcesDirectory)/go19 -xzf go1.19.3.linux-amd64.tar.gz
         # Installing tests dependencies.
-        export PATH=$PATH:/usr/local/go/bin
-        export GOBIN=/usr/local/go/bin
+        export PATH=$PATH:$(Build.SourcesDirectory)/go19/bin
+        export GOBIN=$(Build.SourcesDirectory)/go19/bin
+
+        cd ./src/
 
         echo Restoring packages
 
@@ -146,7 +148,7 @@ jobs:
           printf "Error packing: aad-auth-proxy.tar"
           exit 1
         fi
-      workingDirectory: $(Build.SourcesDirectory)/src/
+      workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Compile and build tar file'
 
     - bash: |
@@ -155,7 +157,7 @@ jobs:
         docker buildx use testbuilder
         docker login $(ACR_REGISTRY) -u $(ACR_USERNAME) -p $(ACR_PASSWORD)
         if [ "$(Build.Reason)" != "PullRequest" ]; then
-          docker buildx build . --file ./Dockerfile -t $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --push
+          docker buildx build . --file ../Dockerfile -t $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --push
           docker pull $(FULL_IMAGE_NAME)
         else
           docker buildx build . --file ./Dockerfile -t $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --load
