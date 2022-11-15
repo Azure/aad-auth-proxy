@@ -160,7 +160,7 @@ jobs:
           docker buildx build . --file ../Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --push
           docker pull $(FULL_IMAGE_NAME)
         else
-          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --load
+          docker buildx build . --file ../Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --load
         fi
       workingDirectory: $(Build.SourcesDirectory)/src/
       displayName: "Build: build and push image to dev ACR"
