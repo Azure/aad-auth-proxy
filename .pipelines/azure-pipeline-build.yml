@@ -113,7 +113,8 @@ jobs:
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash:
-      inputs: '$(Build.SourcesDirectory)/.pipelines/scripts/build.sh'
+      inputs:
+        filePath: '$(Build.SourcesDirectory)/.pipelines/scripts/build.sh'
       workingDirectory: $(Build.SourcesDirectory)/src/
       displayName: 'Compile and build tar file'
 
