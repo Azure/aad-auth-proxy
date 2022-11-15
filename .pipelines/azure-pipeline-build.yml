@@ -112,10 +112,7 @@ jobs:
       condition: or(eq(variables.IS_PR, true), eq(variables.IS_MAIN_BRANCH, true))
       workingDirectory: $(Build.SourcesDirectory)
 
-    - bash:
-      inputs:
-        targetType: 'filePath'
-        filePath: '$(Build.SourcesDirectory)/.pipelines/scripts/build.sh'
+    - bash: '$(Build.SourcesDirectory)/.pipelines/scripts/build.sh'
       workingDirectory: $(Build.SourcesDirectory)/src/
       displayName: 'Compile and build tar file'
 
