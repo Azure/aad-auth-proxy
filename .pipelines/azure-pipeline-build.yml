@@ -122,29 +122,34 @@ jobs:
         # Installing tests dependencies.
         export PATH=$PATH:$(Build.SourcesDirectory)/go19/bin
         export GOBIN=$(Build.SourcesDirectory)/go19/bin
+
         cd ./src/
+
         echo Restoring packages
+
         go get -v -t -d
         if [ $? != 0 ]; then
           printf "Error : [%d] when executing command: go get" $?
           exit $?
         fi
+
         # Note: Building in ubuntu machine, but using alpine image, so we need to statically link binary to libraries
         # https://stackoverflow.com/questions/58205781/dockerfile-error-standard-init-linux-go207-exec-user-process-caused-no-such
         env CGO_ENABLED=0 go build -o main -ldflags "-w -s -v"
+
         if [ $? != 0 ]; then
           printf "Error building main"
           exit 1
         fi
+
         tar cvf aad-auth-proxy.tar main
+
         if [ $? != 0 ]; then
           printf "Error packing: aad-auth-proxy.tar"
           exit 1
         fi
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: 'Compile and build tar file'
 
-    - bash: |
+        echo Building docker image
         mkdir -p $(Build.ArtifactStagingDirectory)/build
         docker buildx create --name testbuilder
         docker buildx use testbuilder
@@ -153,7 +158,7 @@ jobs:
           docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --push
           docker pull $(FULL_IMAGE_NAME)
         else
-          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --push
+          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --load
         fi
       workingDirectory: $(Build.SourcesDirectory)
       displayName: "Build: build and push image to dev ACR"
