@@ -122,33 +122,29 @@ jobs:
         # Installing tests dependencies.
         export PATH=$PATH:$(Build.SourcesDirectory)/go19/bin
         export GOBIN=$(Build.SourcesDirectory)/go19/bin
-
         cd ./src/
-
         echo Restoring packages
-
         go get -v -t -d
         if [ $? != 0 ]; then
           printf "Error : [%d] when executing command: go get" $?
           exit $?
         fi
-
         # Note: Building in ubuntu machine, but using alpine image, so we need to statically link binary to libraries
         # https://stackoverflow.com/questions/58205781/dockerfile-error-standard-init-linux-go207-exec-user-process-caused-no-such
         env CGO_ENABLED=0 go build -o main -ldflags "-w -s -v"
-
         if [ $? != 0 ]; then
           printf "Error building main"
           exit 1
         fi
-
         tar cvf aad-auth-proxy.tar main
-
         if [ $? != 0 ]; then
           printf "Error packing: aad-auth-proxy.tar"
           exit 1
         fi
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Compile and build tar file'
 
+    - bash: |
         mkdir -p $(Build.ArtifactStagingDirectory)/build
         docker buildx create --name testbuilder
         docker buildx use testbuilder
@@ -157,7 +153,7 @@ jobs:
           docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --push
           docker pull $(FULL_IMAGE_NAME)
         else
-          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --load
+          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --push
         fi
       workingDirectory: $(Build.SourcesDirectory)
       displayName: "Build: build and push image to dev ACR"
@@ -248,13 +244,13 @@ jobs:
       helmVersionToInstall: latest
 
   - bash: |
-      envsubst < $(Build.SourcesDirectory)/src/deploy/chart/aad-auth-proxy/Chart-template.yaml > $(Build.SourcesDirectory)/src/deploy/chart/aad-auth-proxy/Chart.yaml && envsubst < $(Build.SourcesDirectory)/src/deploy/chart/aad-auth-proxy/values-template.yaml > $(Build.SourcesDirectory)/src/deploy/chart/aad-auth-proxy/values.yaml
+      envsubst < $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/Chart-template.yaml > $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/Chart.yaml && envsubst < $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/values-template.yaml > $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/values.yaml
       helm version
     displayName: "Build: substitute chart version in Chart.yaml and values.yaml"
 
   - bash: |
       helm package ./aad-auth-proxy/
-    workingDirectory: $(Build.SourcesDirectory)/src/deploy/chart/
+    workingDirectory: $(Build.SourcesDirectory)/deploy/chart/
     displayName: "Build: package helm chart"
 
   - bash: |
@@ -262,7 +258,7 @@ jobs:
       helm push $(HELM_CHART_NAME)-$(HELM_SEMVER).tgz oci://$(ACR_REGISTRY)$(ACR_REPOSITORY_HELM)
       mkdir -p $(Build.ArtifactStagingDirectory)/chart
       echo {\"image.name\":\"$(HELM_FULL_IMAGE_NAME)\"} > $(Build.ArtifactStagingDirectory)/chart/metadata.json
-    workingDirectory: $(Build.SourcesDirectory)/otelcollector/deploy/chart/
+    workingDirectory: $(Build.SourcesDirectory)/deploy/chart/
     displayName: "Build: push helm chart to dev ACR"
     condition: eq(variables.IS_PR, false)
     
