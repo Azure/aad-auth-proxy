@@ -265,7 +265,7 @@ jobs:
       echo {\"image.name\":\"$(HELM_FULL_IMAGE_NAME)\"} > $(Build.ArtifactStagingDirectory)/chart/metadata.json
     workingDirectory: $(Build.SourcesDirectory)/deploy/chart/
     displayName: "Build: push helm chart to dev ACR"
-    condition: eq(variables.IS_PR, false)
+    # condition: eq(variables.IS_PR, false)
     
   - task: PublishBuildArtifacts@1
     displayName: "Ev2: publish helm chart artifacts"
