@@ -186,7 +186,7 @@ jobs:
       displayName: "Ev2: Generate image artifacts"
       condition: and(eq(variables.IS_PR, false), eq(variables.IS_MAIN_BRANCH, true))
       inputs:
-        BuildDropPath: '$(Build.ArtifactStagingDirectory)/linux'
+        BuildDropPath: '$(Build.ArtifactStagingDirectory)/build'
         DockerImagesToScan: '$(FULL_IMAGE_NAME)'
 
     - task: SdtReport@2
