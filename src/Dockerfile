@@ -14,7 +14,7 @@ RUN mkdir /build
 WORKDIR /build
 
 # Copy the tar file to image and extract it
-COPY src/aad-auth-proxy.tar .
+COPY ./aad-auth-proxy.tar .
 RUN tar xvf aad-auth-proxy.tar
 
 # execute command when docker launches / run
