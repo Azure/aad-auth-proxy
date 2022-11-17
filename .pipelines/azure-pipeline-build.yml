@@ -148,21 +148,18 @@ jobs:
           printf "Error packing: aad-auth-proxy.tar"
           exit 1
         fi
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: 'Compile and build tar file'
 
-    - bash: |
-        mkdir -p $(Build.ArtifactStagingDirectory)/linux
+        mkdir -p $(Build.ArtifactStagingDirectory)/build
         docker buildx create --name testbuilder
         docker buildx use testbuilder
         docker login $(ACR_REGISTRY) -u $(ACR_USERNAME) -p $(ACR_PASSWORD)
         if [ "$(Build.Reason)" != "PullRequest" ]; then
-          docker buildx build . --file ../Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --push
+          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --push
           docker pull $(FULL_IMAGE_NAME)
         else
-          docker buildx build . --file ../Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/linux/metadata.json --load
+          docker buildx build . --file ./Dockerfile --tag $(FULL_IMAGE_NAME) --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json --load
         fi
-      workingDirectory: $(Build.SourcesDirectory)/src/
+      workingDirectory: $(Build.SourcesDirectory)
       displayName: "Build: build and push image to dev ACR"
 
     - bash: |
