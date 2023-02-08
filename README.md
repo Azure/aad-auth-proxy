@@ -12,4 +12,3 @@ This project is Azure AD proxy, which can used as a forward proxy to authenticat
 
 # Limitations
 Only helm v3 is supported.
-
