@@ -17,7 +17,8 @@
                   {
                     "type": "ShellExtensionType",
                     "properties": {
-                      "imageName": "ubuntu-latest"
+                      "imageName": "adm-ubuntu-1804-l",
+                      "imageVersion": "v27"
                     }
                   }
                 ]
