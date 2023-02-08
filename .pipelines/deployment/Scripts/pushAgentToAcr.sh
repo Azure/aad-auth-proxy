@@ -58,7 +58,7 @@ else
 fi     
 
 echo "Pushing ${AGENT_IMAGE_FULL_PATH} to ${DESTINATION_ACR_NAME}"
-az acr import --name $DESTINATION_ACR_NAME --registry $BUILD_ACR --source official/${BUILD_REPO_NAME}:${BUILD_TAG} --image $AGENT_IMAGE_FULL_PATH
+az acr import --name $DESTINATION_ACR_NAME --registry $BUILD_ACR --source ${BUILD_REPO_NAME}:${BUILD_TAG} --image $AGENT_IMAGE_FULL_PATH
 if [ $? -eq 0 ]; then
   echo "Retagged and pushed image successfully"
 else
