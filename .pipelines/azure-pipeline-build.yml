@@ -53,8 +53,8 @@ jobs:
       name: setup
       
     - bash: |
-        cd $(Build.SourcesDirectory)/.pipelines/deployment/Scripts
-        cp ../../../deploy/chart/aad-auth-proxy aad-auth-proxy -r
+        cd $(Build.SourcesDirectory)/.pipelines/deployment/ServiceGroupRoot/Scripts
+        cp ../../../../deploy/chart/aad-auth-proxy aad-auth-proxy -r
         export MCR_REPOSITORY='/azuremonitor/auth-proxy/dev/aad-auth-proxy/images'
         export MCR_REPOSITORY_HELM_DEPENDENCIES='/azuremonitor/auth-proxy/dev'
         export HELM_SEMVER=$SETUP_SEMVER
