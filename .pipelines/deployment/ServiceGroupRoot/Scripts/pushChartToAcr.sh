@@ -52,7 +52,7 @@ echo "DESTINATION_ACR_NAME = ${DESTINATION_CHART_REPO_NAME}"
 echo "Done checking that all necessary variables exist."
 
 echo "Building helm chart from image"
-helm package ./ad-auth-proxy/
+helm package ./aad-auth-proxy/
 
 #Login to az cli and authenticate to acr
 echo "Login cli using managed identity"
