@@ -24,6 +24,13 @@
       "targetName": "PushLinuxAgent",
       "actions": [ "Shell/PushAgentToACR" ],
       "dependsOn": [ ]
+    },
+    {
+      "name": "PushHelmChart",
+      "targetType": "ServiceResource",
+      "targetName": "PushHelmChart",
+      "actions": [ "Shell/PushChartToACR" ],
+      "dependsOn": [ "PushLinuxAgent" ]
     }
   ]
 }
