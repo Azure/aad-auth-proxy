@@ -44,6 +44,11 @@
             "Name": "PushLinuxAgent",
             "InstanceOf": "ShellExtension",
             "RolloutParametersPath": "Parameters\\Parameters.json"
+          },
+          {
+            "Name": "PushHelmChart",
+            "InstanceOf": "ShellExtension",
+            "RolloutParametersPath": "Parameters\\ChartParameters.json"
           }
         ]
       }                                                                                                 

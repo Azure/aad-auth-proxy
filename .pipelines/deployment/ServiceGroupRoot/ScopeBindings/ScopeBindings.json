@@ -12,6 +12,10 @@
               {
                 "find": "__DESTINATION_REPO_NAME__",
                 "replaceWith": "$(DestinationRepoName)"
+              },
+              {
+                "find": "__DESTINATION_CHART_REPO_NAME__",
+                "replaceWith": "$(DestinationChartRepoName)"
               },            
               {
                   "find": "__AGENT_RELEASE__",
@@ -44,6 +48,14 @@
               {
                 "find": "__BUILD_TAG__",
                 "replaceWith": "$(BuildTag)"
+              },
+              {
+                "find": "__CHART_TAG__",
+                "replaceWith": "$(ChartTag)"
+              },
+              {
+                "find": "__HELM_CHART_NAME__",
+                "replaceWith": "$(HelmChartName)"
               }
           ]
       }                                                                                                                                                
