@@ -15,9 +15,8 @@ variables:
   ACR_REPOSITORY: '/public/azuremonitor/auth-proxy/dev/aad-auth-proxy/images'
   ACR_REPOSITORY_HELM: '/public/azuremonitor/auth-proxy/dev'
   MCR_REGISTRY: 'mcr.microsoft.com'
-  MCR_REPOSITORY: '/azuremonitor/auth-proxy/dev/aad-auth-proxy/images'
-  MCR_REPOSITORY_HELM: '/azuremonitor/auth-proxy/dev/aad-auth-proxy'
-  MCR_REPOSITORY_HELM_DEPENDENCIES: '/azuremonitor/auth-proxy/dev'
+  MCR_REPOSITORY: '/azuremonitor/auth-proxy/prod/aad-auth-proxy/images'
+  MCR_REPOSITORY_HELM: '/azuremonitor/auth-proxy/prod/aad-auth-proxy'
   IS_PR: $[eq(variables['Build.Reason'], 'PullRequest')]
   IS_MAIN_BRANCH: $[eq(variables['Build.SourceBranchName'], 'main')]
 
@@ -55,8 +54,7 @@ jobs:
     - bash: |
         cd $(Build.SourcesDirectory)/.pipelines/deployment/ServiceGroupRoot/Scripts
         cp ../../../../deploy/chart/aad-auth-proxy aad-auth-proxy -r
-        export MCR_REPOSITORY='/azuremonitor/auth-proxy/dev/aad-auth-proxy/images'
-        export MCR_REPOSITORY_HELM_DEPENDENCIES='/azuremonitor/auth-proxy/dev'
+        export MCR_REPOSITORY='/azuremonitor/auth-proxy/prod/aad-auth-proxy/images'
         export HELM_SEMVER=$SETUP_SEMVER
         export IMAGE_TAG=$SETUP_SEMVER
         env
