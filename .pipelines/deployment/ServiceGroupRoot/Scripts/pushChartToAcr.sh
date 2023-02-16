@@ -10,15 +10,21 @@ if [ -z $BUILD_TAG ]; then
   exit 1
 fi
 
+echo "BUILD_TAG = ${BUILD_TAG}"
+
 if [ -z $HELM_CHART_NAME ]; then
   echo "-e error value of HELM_CHART_NAME variable shouldnt be empty. Check release variables"
   exit 1
 fi
 
+echo "HELM_CHART_NAME = ${HELM_CHART_NAME}"
+
 if [ -z $HELM_SEMVER ]; then
   echo "-e error value of HELM_SEMVER variable shouldnt be empty. Check release variables"
   exit 1
 fi
+
+echo "HELM_SEMVER = ${HELM_SEMVER}"
 
 if [ -z $BUILD_ACR ]; then
   echo "-e error value of BUILD_ACR shouldn't be empty. check release variables"
