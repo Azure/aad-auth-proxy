@@ -1,0 +1,9 @@
+{
+    "instanceUrl": "https://msazure.visualstudio.com",
+    "projectName": "One",
+    "areaPath": "One\\Security Fundamentals\\Generic Security Bug",
+    "notificationAliases": [
+        "nasundar@microsoft.com",
+        "promwebapi@microsoft.com"
+    ]
+}

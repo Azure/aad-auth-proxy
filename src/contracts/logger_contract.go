@@ -7,4 +7,5 @@ type ILogger interface {
 	Error(args ...interface{})
 	Info(args ...interface{})
 	Warn(args ...interface{})
+	Fatal(args ...interface{})
 }
