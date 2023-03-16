@@ -8,22 +8,18 @@ import (
 	"aad-auth-proxy/telemetry"
 	"aad-auth-proxy/token_provider"
 	"aad-auth-proxy/utils"
-	"errors"
-	"io"
-	"io/ioutil"
+	"context"
 	"net/http"
-	"net/http/httputil"
-	"net/url"
 
 	log "github.com/sirupsen/logrus"
 )
 
 // Main entry point.
 func main() {
-
 	// Handle panics
 	defer utils.HandlePanic("main")
 
+	// Telemetry
 	logger := telemetry.NewLogger()
 
 	// Read configuration parameters
@@ -32,19 +28,41 @@ func main() {
 	audience := configuration.GetAudience()
 	targetHost := configuration.GetTargetHost()
 
+	// Traces
+	tracerShutdown, err := telemetry.InitializeTracer(logger, configuration)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := tracerShutdown(context.Background()); err != nil {
+			logger.Fatal(err)
+		}
+	}()
+
+	// Metrics
+	metricShutdown, err := telemetry.InitializeMetric(logger, configuration)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := metricShutdown(context.Background()); err != nil {
+			logger.Fatal(err)
+		}
+	}()
+
 	// Create handler to fetch tokens
 	handler := createHandlerWithTokenProvider(configuration, audience, targetHost, logger)
 
 	// Note: These (Health and Readiness) check whether app can fetch a token with provided identity,
 	// it does not evaluate end-to-end authentication and authorization of acquired tokens.
 	// Health check handler
-	http.HandleFunc("/health", handler.ReadinessCheckHandler)
+	http.HandleFunc("/health", handler.ReadinessCheck)
 
 	// Readiness check handler
-	http.HandleFunc("/ready", handler.ReadinessCheckHandler)
+	http.HandleFunc("/ready", handler.ReadinessCheck)
 
 	// Reverse proxy handler
-	http.HandleFunc("/", handler.ReverseProxyHandler)
+	http.HandleFunc("/", handler.ProxyRequest)
 
 	// Listen at specified port
 	log.Fatal(http.ListenAndServe(":"+listeningPort, nil))
@@ -69,70 +87,15 @@ func createHandlerWithTokenProvider(configuration utils.IConfiguration, audience
 		logger.Error("TokenCredential creation failed:", err)
 	}
 
-	proxy, err := createReverseProxy(targetHost, tokenProvider)
+	proxy, err := handler.CreateReverseProxy(targetHost, tokenProvider)
 	if err != nil {
 		logger.Error("Proxy creation failed:", err)
 	}
 
 	// Create handler to return tokens based on audience
-	handler, err := handler.NewHandler(proxy, tokenProvider)
+	handler, err := handler.NewHandler(proxy, tokenProvider, configuration)
 	if err != nil {
 		logger.Error("NewHandler failed:", err)
 	}
 	return handler
-}
-
-func createReverseProxy(targetHost string, tokenProvider contracts.ITokenProvider) (*httputil.ReverseProxy, error) {
-	if targetHost == "" {
-		return nil, errors.New("targetHost path cannot be empty")
-	}
-
-	url, err := url.Parse(targetHost)
-	if err != nil {
-		return nil, err
-	}
-	proxy := httputil.NewSingleHostReverseProxy(url)
-
-	proxy.Director = func(request *http.Request) {
-		modifyRequest(request, targetHost, tokenProvider)
-	}
-	proxy.ErrorHandler = handleError
-	proxy.ModifyResponse = modifyResponse
-
-	return proxy, nil
-}
-
-func modifyRequest(request *http.Request, targetHost string, tokenProvider contracts.ITokenProvider) {
-	request.URL.Scheme = constants.HTTPS_SCHEME
-	request.URL.Host = targetHost
-	request.Host = targetHost
-}
-
-func handleError(response http.ResponseWriter, request *http.Request, err error) {
-	log.WithFields(log.Fields{
-		"Request": request.URL.String(),
-	}).Errorln("Request failed", err)
-}
-
-func modifyResponse(response *http.Response) (err error) {
-	log.WithFields(log.Fields{
-		"Request":       response.Request.URL.String(),
-		"StatusCode":    response.StatusCode,
-		"Status":        response.Status,
-		"ContentLength": response.ContentLength,
-	}).Infoln("Successfully sent request, returning response back.")
-
-	// If server returned error, log response as well
-	if response.StatusCode >= http.StatusBadRequest {
-		// Read 2KB of data
-		limitedReader := &io.LimitedReader{R: response.Body, N: constants.BYTES_2KB}
-		responseBody, err := ioutil.ReadAll(limitedReader)
-		if err != nil {
-			return err
-		}
-
-		log.Println("Error response body: ", string(responseBody[:]))
-	}
-
-	return nil
 }

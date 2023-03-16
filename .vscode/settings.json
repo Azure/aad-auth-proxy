@@ -1,0 +1,18 @@
+{
+    "devskim.enableBestPracticeRules": true,
+    "gopls": {
+        "completeUnimported": true,
+        "experimentalWorkspaceModule": true
+    },
+    "go.delveConfig": {
+        "useApiV1": false,
+        "dlvLoadConfig": {
+            "followPointers": true,
+            "maxVariableRecurse": 3,
+            "maxStringLen": 1024,
+            "maxArrayValues": 400,
+            "maxStructFields": -1
+        }
+    },
+    "go.lintTool": "golangci-lint",
+}

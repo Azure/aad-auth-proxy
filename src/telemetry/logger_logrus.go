@@ -77,3 +77,10 @@ func (l *Logger) Info(args ...interface{}) {
 func (l *Logger) Warn(args ...interface{}) {
 	l.logger.Warn(args...)
 }
+
+//
+// Logger print fatal level message.
+//
+func (l *Logger) Fatal(args ...interface{}) {
+	l.logger.Fatal(args...)
+}

@@ -53,7 +53,7 @@ if [ -z $DESTINATION_CHART_REPO_NAME ]; then
   exit 1
 fi
 
-echo "DESTINATION_ACR_NAME = ${DESTINATION_CHART_REPO_NAME}"
+echo "DESTINATION_CHART_REPO_NAME = ${DESTINATION_CHART_REPO_NAME}"
 
 echo "Done checking that all necessary variables exist."
 
