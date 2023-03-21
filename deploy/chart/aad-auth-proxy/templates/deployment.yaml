@@ -52,6 +52,12 @@ spec:
               value: {{ required "aadClientCertificatePath is required for aadApplication identity type" .Values.aadClientCertificatePath | toString | trim | quote }}
             {{- end}}
             {{- end }}
+            - name: AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES
+              value: {{ optional .Values.aadTokenRefreshIntervalInMinutes | toString | trim | quote }}
+            - name: OTEL_SERVICE_NAME
+              value: {{ optional .Values.otelServiceName | toString | trim | quote }}
+            - name: OTEL_GRPC_ENDPOINT
+              value: {{ optional .Values.otelGrpcEndpoint | toString | trim | quote }}
           livenessProbe:
             httpGet:
               path: /health

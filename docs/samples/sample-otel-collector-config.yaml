@@ -1,0 +1,36 @@
+receivers:
+  # Make sure to add the otlp receiver.
+  # This will open up the receiver on port 4317
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "0.0.0.0:4317"
+processors:
+extensions:
+  health_check: {}
+exporters:
+  jaeger:
+    endpoint: "jaeger-collector.observability.svc.cluster.local:14250"
+    tls:
+      insecure: true
+  prometheusremotewrite:
+    endpoint: "http://azuremonitor-ingestion.observability.svc.cluster.local/dataCollectionRules/dcr-guid/streams/Microsoft-PrometheusMetrics/api/v1/write?api-version=2021-11-01-preview"
+    tls:
+      insecure: true
+  azuremonitor:
+    instrumentation_key: "GUID"
+  logging:
+service:
+  extensions: [health_check]
+  telemetry:
+    logs:
+      level: "debug"
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: []
+      exporters: [jaeger, azuremonitor]
+    metrics:
+      receivers: [otlp]
+      processors: []
+      exporters: [prometheusremotewrite]

@@ -9,6 +9,9 @@ identityType: systemAssigned
 aadClientId: ""
 aadTenantId: ""
 aadClientCertificatePath: ""
+aadTokenRefreshIntervalInMinutes: "60"
+otelServiceName: "aad_auth_proxy"
+otelGrpcEndpoint: "http://localhost:4317"
 
 replicaCount: 1
 
