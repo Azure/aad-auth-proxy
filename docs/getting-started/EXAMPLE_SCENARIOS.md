@@ -5,7 +5,7 @@ In this example we will deploy proxy to query Prometheus metrics from Azure Moni
 1. [sample-proxy-query.yaml](../samples/sample-proxy-query.yaml) can be used as a template to modify [parameters](GETTING_STARTED.md#parameters).
 2. [Create Azure monitor workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/azure-monitor-workspace-manage?tabs=azure-portal#create-an-azure-monitor-workspace).
 3. Use "Query endpoint" from Azure monitor workspace oiverview page as TARGET_HOST.
-4. Modify identity parameters based on the identity type you choose. Assign [read](IDENTITY.md#read) permissions to identity.
+4. Modify identity parameters based on the identity type you choose. Assign [read](IDENTITY.md#add-read-permissions) permissions to identity.
     - [System identity](IDENTITY.md#system-identity)
     - [User identity](IDENTITY.md#user-identity)
     - [AAD application](IDENTITY.md#aad-application)
@@ -17,10 +17,10 @@ In this example we will deploy proxy to query Prometheus metrics from Azure Moni
 ## Ingest Prometheus metrics via remote write
 In this example we will deploy proxy to ingest Prometheus metrics to Azure Monitor Workspace via [prometheus remote write](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write). 
 1. [sample-proxy-ingestion.yaml](../samples/sample-proxy-ingestion.yaml) can be used as a template to modify [parameters](GETTING_STARTED.md#parameters).
-2. [Create Azure monitor workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/azure-monitor-workspace-manage?tabs=azure-portal#create-an-azure-monitor-workspace).
+2. [Create Azure monitor workspace](https://learn.microsoft.com/azure/azure-monitor/essentials/azure-monitor-workspace-manage?tabs=azure-portal#create-an-azure-monitor-workspace).
 3. Use "Metrics ingestion endpoint" from Azure monitor workspace oiverview page as TARGET_HOST.
 *Note: metrics ingestion endpoint will look like "https://naga-aad-auth-proxy-amw-cuqx.eastus-1.metrics.ingest.monitor.azure.com/dataCollectionRules/dcr-65cb9d21936f43e3b2035d2/streams/Microsoft-PrometheusMetrics/api/v1/write?api-version=2021-11-01-preview", here only pick host part for TARGET_HOST, which is "https://naga-aad-auth-proxy-amw-cuqx.eastus-1.metrics.ingest.monitor.azure.com". The remaining path will be used in step 8 in remote write endpoint.*
-4. Modify identity parameters based on the identity type you choose. Assign [write](IDENTITY.md#write) permissions to identity.
+4. Modify identity parameters based on the identity type you choose. Assign [write](IDENTITY.md#add-write-permissions) permissions to identity.
     - [System identity](IDENTITY.md#system-identity)
     - [User identity](IDENTITY.md#user-identity)
     - [AAD application](IDENTITY.md#aad-application)

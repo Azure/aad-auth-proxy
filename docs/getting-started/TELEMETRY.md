@@ -25,7 +25,7 @@ Proxy is instrumented with [OTEL](https://opentelemetry.io/) and will emit metri
 
 ## Grafana
 [Grafana dashboard](../dashboards/grafana-dashboard.json) can be used to visualize metrics. Job dropdown can be used to select the specific deployment by setting OTEL_SERVICE_NAME [parameter](GETTING_STARTED.md#parameters).
-![Grafana dashboard](../dashboards/aad-auth-proxy-grafana.png)
+![Grafana dashboard](../images/aad-auth-proxy-grafana.png)
 
 ## OTEL Config
 [OTEL Collector](https://github.com/open-telemetry/opentelemetry-collector) to receive and export telemetry. [sample-otel-collector-config.yaml](../samples/sample-otel-collector-config.yaml) shows that we are receiving traces and metrics via grpc. 
