@@ -11,10 +11,10 @@ This project is Azure AD proxy, which is a forward proxy to authenticate request
 This can be deployed in custom templates using release image as a side car or a service. This can be deployed using helm chart as well, which will be deployed as a service. Detailed instructions on how to deploy can be found [here](./docs/getting-started/GETTING_STARTED.md).
 
 ## Telemetry
-This has ben instrumented with [OTEL](https://opentelemetry.io/), it emits traces and metrics, which can be collected using [OTEL Collector](https://github.com/open-telemetry/opentelemetry-collector). A grafana dashboard to visualize metrics is also included.
+This has ben instrumented with [OTEL](https://opentelemetry.io/), it emits traces and metrics, which can be collected using [OTEL Collector](https://github.com/open-telemetry/opentelemetry-collector). A [grafana dashboard](./docs/getting-started/TELEMETRY.md#grafana) to visualize metrics is also included.
 
 ## Securing traffic
-This proxy can be deployed as a side car or as a service. When deployed as a side car, only the containers within the pod can access this proxy, but when deployed as a service without restricting traffic, and container can access this proxy. So there might be a need to secure traffic this to this pod and this can be achieveed using [Network policies in Azure Kubernetes Service](https://learn.microsoft.com/azure/aks/use-network-policies).
+This proxy can be deployed as a side car or as a service. When deployed as a side car, only the containers within the pod can access this proxy, but when deployed as a service without restricting traffic, any container can access this proxy. So there might be a need to secure traffic to proxy pod and can be achieved using [Network policies in Azure Kubernetes Service](https://learn.microsoft.com/azure/aks/use-network-policies).
 
 ## Limitations
 Only helm v3 is supported.
