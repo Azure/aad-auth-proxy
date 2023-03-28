@@ -14,7 +14,7 @@ This can be deployed in custom templates using release image as a side car or a 
 This has been instrumented with [OTEL](https://opentelemetry.io/), it emits traces and metrics, which can be collected using [OTEL Collector](https://github.com/open-telemetry/opentelemetry-collector). A grafana dashboard to visualize metrics is also included.
 
 ## Securing traffic
-This proxy can be deployed as a side car or as a service. When deployed as a side car, only the containers within the pod can access this proxy, but when deployed as a service without restricting traffic, and container can access this proxy. So there might be a need to secure traffic this to this pod and this can be achieveed using [Network policies in Azure Kubernetes Service](https://learn.microsoft.com/azure/aks/use-network-policies).
+This proxy can be deployed as a side car or as a service. When deployed as a side car, only the containers within the pod can access this proxy, but when deployed as a service without restricting traffic, any container can access this proxy. So there might be a need to secure traffic to proxy pod and can be achieved using [Network policies in Azure Kubernetes Service](https://learn.microsoft.com/azure/aks/use-network-policies).
 
 ## Limitations
 Only helm v3 is supported.

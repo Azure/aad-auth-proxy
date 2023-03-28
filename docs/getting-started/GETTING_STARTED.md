@@ -19,7 +19,7 @@ Below sample command can be modified with user specific parameters and deployed 
 ## Parameters
 
 | Image Parameter | Helm chart Parameter name | Description | Supported values | Mandatory |
-| --------- | --------- | --------- | --------- | --------- |
+| --------- | --------- | --------------- | --------- | --------- |
 |  TARGET_HOST | targetHost | this is the target host where you want to forward the request to. | | Yes |
 |  IDENTITY_TYPE | identityType | this is the identity type which will be used to authenticate requests. This proxy supports 3 types of identities. | systemassigned, userassigned, aadapplication | Yes |
 | AAD_CLIENT_ID | aadClientId | this is the client_id of the identity used. This is needed for userassigned and aadapplication identity types. Check [Fetch parameters for identities](IDENTITY.md#fetch-parameters-for-identities) on how to fetch client_id | | Yes for userassigned and aadapplication |
@@ -32,8 +32,8 @@ Below sample command can be modified with user specific parameters and deployed 
 | OTEL_GRPC_ENDPOINT | otelGrpcEndpoint | proxy will push OTEL telemetry to this endpoint. Default values is http://localhost:4317 | | No |
 
 ## Liveness and readiness probes
-Liveness and readiness probes are exposed with paths "/health" and "/ready" respectively. This can viewed in [sample-proxy-deployment.yaml](../samples/sample-proxy-deployment.yaml).
+Proxy supports readiness and liveness probes. [Sample configuration](../samples/sample-proxy-deployment.yaml) uses these checks to monitor health of the proxy.
 
 ## Example scenarios
-### [Query prometheus metrics for KEDA or Kubecost](EXAMPLE_SCENARIOS.md#query-prometheus-metrics-for-keda-or-kubecost)
+### [Query prometheus metrics for KEDA or Kubecost](EXAMPLE_SCENARIOS.md#query-prometheus-metrics-for-kubecost)
 ### [Ingest prometheus metrics via prometheus remote write](EXAMPLE_SCENARIOS.md#ingest-prometheus-metrics-via-remote-write)

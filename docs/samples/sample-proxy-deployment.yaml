@@ -25,21 +25,21 @@ spec:
                 containerPort: 8081
               env:
               - name: AUDIENCE
-                value: https://monitor.azure.com
+                value: https://monitor.azure.com/.default
               - name: TARGET_HOST
-                value: https://azure-monitor-workspace.eastus-1.metrics.ingest.monitor.azure.com
+                value: <YOUR-AZURE-MONITOR-WORKSPACE-ENDPOINT>
               - name: LISTENING_PORT
                 value: "8081"
               - name: IDENTITY_TYPE
                 value: userAssigned
               - name: AAD_CLIENT_ID
-                value: a711a6a4-1052-44eb-aec8-182e2b604c7f
+                value: <YOUR-AAD-CLIENT-ID>
               - name: AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES
                 value: "10"
               - name: OTEL_GRPC_ENDPOINT
-                value: "otel-collector.observability.svc.cluster.local:4317"
+                value: <YOUR-OTEL-GRPC-ENDPOINT> # "otel-collector.observability.svc.cluster.local:4317"
               - name: OTEL_SERVICE_NAME
-                value: azuremonitor_ingestion
+                value: <YOUE-SERVICE-NAME>
               livenessProbe:
                 httpGet:
                   path: /health
