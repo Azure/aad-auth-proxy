@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/oss/busybox/busybox:1.33.1 as builder
 
-FROM cblmariner.azurecr.io/distroless/minimal:2.0
+FROM mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0
 
 # Copy static shell into base image.
 COPY --from=builder /bin/sh /bin/sh
