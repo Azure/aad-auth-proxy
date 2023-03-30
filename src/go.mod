@@ -43,6 +43,7 @@ require (
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
+	golang.org/x/image v0.5.0 // indirect
 )
 
 replace golang.org/x/text => golang.org/x/text v0.3.8
