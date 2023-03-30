@@ -1,7 +1,7 @@
 # Example scenarios
 
 ## Query Prometheus metrics for Kubecost
-In this example we will deploy proxy to query Prometheus metrics from Azure Monitor Workspace in order to scale out deployments using [KEDA](https://keda.sh/). 
+In this example we will deploy proxy to query Prometheus metrics from Azure Monitor Workspace in order to monitor billing using [Kubecost](https://www.kubecost.com/).
 1. [sample-proxy-query.yaml](../samples/sample-proxy-query.yaml) can be used as a template to modify [parameters](GETTING_STARTED.md#parameters).
 2. [Create Azure monitor workspace](https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/azure-monitor-workspace-manage?tabs=azure-portal#create-an-azure-monitor-workspace).
 3. Use "Query endpoint" from Azure monitor workspace oiverview page as TARGET_HOST.
