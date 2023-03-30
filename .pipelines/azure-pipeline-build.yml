@@ -12,11 +12,11 @@ pr:
 variables:
   HELM_CHART_NAME: 'aad-auth-proxy'
   ACR_REGISTRY: 'aadproxydev.azurecr.io'
-  ACR_REPOSITORY: '/internal/azuremonitor/auth-proxy/dev/aad-auth-proxy/images'
-  ACR_REPOSITORY_HELM: '/internal/azuremonitor/auth-proxy/dev'
+  ACR_REPOSITORY: '/public/azuremonitor/auth-proxy/dev/aad-auth-proxy/images'
+  ACR_REPOSITORY_HELM: '/public/azuremonitor/auth-proxy/dev'
   MCR_REGISTRY: 'mcr.microsoft.com'
   MCR_REPOSITORY: '/azuremonitor/auth-proxy/prod/aad-auth-proxy/images'
-  MCR_REPOSITORY_HELM: '/azuremonitor/auth-proxy/prod/aad-auth-proxy'
+  MCR_REPOSITORY_HELM: '/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart'
   IS_PR: $[eq(variables['Build.Reason'], 'PullRequest')]
   IS_MAIN_BRANCH: $[eq(variables['Build.SourceBranchName'], 'main')]
 
