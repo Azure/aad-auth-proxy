@@ -171,24 +171,17 @@ func (tokenProvider *tokenProvider) setToken(ctx context.Context, token string) 
 }
 
 func (tokenProvider *tokenProvider) updateRefreshDuration(accessToken azcore.AccessToken) error {
-	earlistTime := tokenProvider.getEarliestRefreshTime(accessToken)
+	earlistTime := tokenProvider.getRefreshDuration(accessToken)
 	tokenProvider.refreshDuration = earlistTime.Sub(time.Now().UTC())
 	return nil
 }
 
-// getEarliestRefreshTime returns the earliest time between 5 min before token expiry and user configured time
-// If both are in the past, return 1 min from now
-func (tokenProvider *tokenProvider) getEarliestRefreshTime(accessToken azcore.AccessToken) time.Time {
+func (tokenProvider *tokenProvider) getRefreshDuration(accessToken azcore.AccessToken) time.Time {
 	tokenExpiryTimestamp := accessToken.ExpiresOn.UTC()
-	deltaExpirytime5Min := tokenExpiryTimestamp.UTC().Add(-constants.TIME_5_MINUTES)
-	userConfiguredTimeFromNow := time.Now().UTC().Add(tokenProvider.userConfiguredDurationPercentage * accessToken.ExpiresOn.Sub(time.Now().UTC()))
+	userConfiguredTimeFromNow := time.Now().UTC().Add(time.Duration(100-tokenProvider.userConfiguredDurationPercentage) * accessToken.ExpiresOn.Sub(time.Now()) / 100)
 
-	// Return the earliest time between 5 min before token expiry and user configured time
-	// If both are in the past, return 1 min from now
-	if userConfiguredTimeFromNow.Before(deltaExpirytime5Min) {
+	if userConfiguredTimeFromNow.Before(tokenExpiryTimestamp) {
 		return userConfiguredTimeFromNow
-	} else if deltaExpirytime5Min.After(time.Now().UTC()) {
-		return deltaExpirytime5Min
 	} else {
 		return time.Now().UTC().Add(constants.TIME_1_MINUTES)
 	}
