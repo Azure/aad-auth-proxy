@@ -67,7 +67,8 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 
 	span.SetAttributes(attributes...)
 
-	if handler.checkTokenProvider(ctx) != nil {
+	err := handler.checkTokenProvider(ctx)
+	if err != nil {
 		// Metric attributes
 		metricAttributes := []attribute.KeyValue{
 			attribute.String("target_host", r.URL.Host),
@@ -85,12 +86,13 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 			requestCountIntrument.Add(ctx, 1, metricAttributes...)
 		}
 
-		handler.failRequest(w, r, ctx)
+		handler.failRequest(w, r, ctx, err)
 		return
 	}
 
 	// Add authorization header
-	r.Header.Set(constants.HEADER_AUTHORIZATION, "Bearer "+handler.tokenProvider.GetAccessToken())
+	token, _ := handler.tokenProvider.GetAccessToken()
+	r.Header.Set(constants.HEADER_AUTHORIZATION, "Bearer "+token)
 
 	// Start timer for calculating request duration
 	startTime := time.Now()
@@ -128,8 +130,9 @@ func (handler *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	// Check token provider
-	if handler.checkTokenProvider(ctx) != nil {
-		handler.failRequest(w, r, ctx)
+	err := handler.checkTokenProvider(ctx)
+	if err != nil {
+		handler.failRequest(w, r, ctx, err)
 		return
 	}
 
@@ -140,20 +143,26 @@ func (handler *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 // TokenProvider check
 // If token provider is not instantiated, cannot fetch token, so fail request
 func (handler *Handler) checkTokenProvider(ctx context.Context) error {
-	if handler == nil || handler.tokenProvider == nil || len(handler.tokenProvider.GetAccessToken()) == 0 {
-		// Start tracing
-		_, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(ctx, "checkTokenProvider")
-		defer span.End()
+	if handler == nil || handler.tokenProvider == nil {
+		token, err := handler.tokenProvider.GetAccessToken()
+		if len(token) == 0 || err != nil {
+			// Start tracing
+			_, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(ctx, "checkTokenProvider")
+			defer span.End()
 
-		err := errors.New("handler, tokenProvider is not instantiated, cannot forward request")
+			// If we run into a case where we received empty token without any errors
+			if err == nil {
+				err = errors.New("handler, tokenProvider is not instantiated, cannot forward request")
+			}
 
-		span.SetAttributes(attribute.Int("proxy.status_code", http.StatusServiceUnavailable))
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "failed to forward request")
+			span.SetAttributes(attribute.Int("proxy.status_code", http.StatusServiceUnavailable))
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "failed to forward request")
 
-		log.Errorln("failed to forward request", err)
+			log.Errorln("failed to forward request", err)
 
-		return err
+			return err
+		}
 	}
 
 	return nil
@@ -161,13 +170,13 @@ func (handler *Handler) checkTokenProvider(ctx context.Context) error {
 
 // Fail request
 // This will fail the request with 503
-func (handler *Handler) failRequest(w http.ResponseWriter, r *http.Request, ctx context.Context) {
+func (handler *Handler) failRequest(w http.ResponseWriter, r *http.Request, ctx context.Context, err error) {
 	_, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(ctx, "failRequest")
 	defer span.End()
 
 	statusCode := http.StatusServiceUnavailable
 	errorCode := "AuthenticationTokenNotFound"
-	errorMessage := "cannot get authentication token"
+	errorMessage := err.Error()
 
 	span.SetAttributes(
 		attribute.Int("response.status_code", statusCode),
