@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"errors"
 	"io/ioutil"
+	"path"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	pkcs12 "software.sslmate.com/src/go-pkcs12"
@@ -31,9 +33,20 @@ func NewCerificateManager(path string) (certManager *CertificateManager, err err
 }
 
 func (manager *CertificateManager) GetTlsCertificate() (tlsCert *tls.Certificate, hasCertChanged bool, err error) {
-	certificate, err := manager.fetchTlsCertificate()
+	content, err := manager.readCertificateFromLocal()
 	if err != nil {
 		return nil, hasCertChanged, err
+	}
+
+	var certificate *tls.Certificate
+	certExtension := manager.getCertificateExtension()
+	switch certExtension {
+	case ".pfx":
+		certificate, err = manager.fetchTlsCertificateFromPfx(content)
+	case ".pem":
+		certificate, err = manager.fetchTlsCertificateFromPem(content)
+	default:
+		return nil, hasCertChanged, errors.New("unsupported certificate format")
 	}
 
 	// certificate not yet read or it has changed
@@ -60,13 +73,26 @@ func (manager *CertificateManager) readCertificateFromLocal() ([]byte, error) {
 	return content, nil
 }
 
-// Converts pfx certificate containing private key to Tls certificate.
-func (manager *CertificateManager) fetchTlsCertificate() (tlsCert *tls.Certificate, err error) {
-	content, err := manager.readCertificateFromLocal()
+// Returns file extension of the certificate.
+func (manager *CertificateManager) getCertificateExtension() string {
+	return strings.ToLower(path.Ext(manager.path))
+}
+
+// Convert pem certificate containing private key to Tls certificate.
+func (manager *CertificateManager) fetchTlsCertificateFromPem(content []byte) (tlsCert *tls.Certificate, err error) {
+	certificate, err := tls.X509KeyPair(content, content)
 	if err != nil {
+		log.WithFields(log.Fields{
+			"certificatePath": manager.path,
+		}).Error("failed to decode certificate: ", err)
 		return nil, err
 	}
 
+	return &certificate, nil
+}
+
+// Converts pfx certificate containing private key to Tls certificate.
+func (manager *CertificateManager) fetchTlsCertificateFromPfx(content []byte) (tlsCert *tls.Certificate, err error) {
 	// Decode chain returns private key, leaf cert(public cert in 0 indes), extra public certs and error if any
 	privateKey, leafCert, certs, err := pkcs12.DecodeChain(content, "")
 	if err != nil {
