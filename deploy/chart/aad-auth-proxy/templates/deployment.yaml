@@ -52,7 +52,7 @@ spec:
               value: {{ required "aadClientCertificatePath is required for aadApplication identity type" .Values.aadClientCertificatePath | toString | trim | quote }}
             {{- end}}
             {{- end }}
-            - name: AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES
+            - name: AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE
               value: {{ optional .Values.aadTokenRefreshIntervalInMinutes | toString | trim | quote }}
             - name: OTEL_SERVICE_NAME
               value: {{ optional .Values.otelServiceName | toString | trim | quote }}
