@@ -27,14 +27,14 @@ type identity struct {
 }
 
 type tokenProvider struct {
-	token                  string
-	ctx                    context.Context
-	lastError              error
-	userConfiguredDuration time.Duration
-	refreshDuration        time.Duration
-	credentialClient       azcore.TokenCredential
-	options                *policy.TokenRequestOptions
-	identity               identity
+	token                            string
+	ctx                              context.Context
+  lastError                        error
+	userConfiguredDurationPercentage uint8
+	refreshDuration                  time.Duration
+	credentialClient                 azcore.TokenCredential
+	options                          *policy.TokenRequestOptions
+	identity                         identity
 }
 
 func NewTokenProvider(audience string, config utils.IConfiguration, certManager *certificate.CertificateManager, logger contracts.ILogger) (contracts.ITokenProvider, error) {
@@ -46,7 +46,7 @@ func NewTokenProvider(audience string, config utils.IConfiguration, certManager 
 	identityType := config.GetIdentityType()
 	aadClientId := config.GetAadClientId()
 	aadTenantId := config.GetAadTenantId()
-	userConfiguredDuration := config.GetAadTokenRefreshDurationInMinutes()
+	userConfiguredDurationPercentage := config.GetAadTokenRefreshDurationInPercentage()
 
 	var cred azcore.TokenCredential
 	var err error
@@ -77,12 +77,12 @@ func NewTokenProvider(audience string, config utils.IConfiguration, certManager 
 	}
 
 	tokenProvider := &tokenProvider{
-		ctx:                    context.Background(),
-		token:                  "",
-		lastError:              nil,
-		userConfiguredDuration: userConfiguredDuration,
-		credentialClient:       cred,
-		options:                &policy.TokenRequestOptions{Scopes: []string{audience}},
+		ctx:                              context.Background(),
+		token:                            "",
+    lastError:                        nil,
+		userConfiguredDurationPercentage: userConfiguredDurationPercentage,
+		credentialClient:                 cred,
+		options:                          &policy.TokenRequestOptions{Scopes: []string{audience}},
 		identity: identity{
 			audience:      audience,
 			clientId:      aadClientId,
@@ -179,24 +179,17 @@ func (tokenProvider *tokenProvider) setToken(ctx context.Context, token string) 
 }
 
 func (tokenProvider *tokenProvider) updateRefreshDuration(accessToken azcore.AccessToken) error {
-	earlistTime := tokenProvider.getEarliestRefreshTime(accessToken)
+	earlistTime := tokenProvider.getRefreshDuration(accessToken)
 	tokenProvider.refreshDuration = earlistTime.Sub(time.Now().UTC())
 	return nil
 }
 
-// getEarliestRefreshTime returns the earliest time between 5 min before token expiry and user configured time
-// If both are in the past, return 1 min from now
-func (tokenProvider *tokenProvider) getEarliestRefreshTime(accessToken azcore.AccessToken) time.Time {
+func (tokenProvider *tokenProvider) getRefreshDuration(accessToken azcore.AccessToken) time.Time {
 	tokenExpiryTimestamp := accessToken.ExpiresOn.UTC()
-	deltaExpirytime5Min := tokenExpiryTimestamp.UTC().Add(-constants.TIME_5_MINUTES)
-	userConfiguredTimeFromNow := time.Now().UTC().Add(tokenProvider.userConfiguredDuration)
+	userConfiguredTimeFromNow := time.Now().UTC().Add(time.Duration(100-tokenProvider.userConfiguredDurationPercentage) * accessToken.ExpiresOn.Sub(time.Now()) / 100)
 
-	// Return the earliest time between 5 min before token expiry and user configured time
-	// If both are in the past, return 1 min from now
-	if userConfiguredTimeFromNow.Before(deltaExpirytime5Min) {
+	if userConfiguredTimeFromNow.Before(tokenExpiryTimestamp) {
 		return userConfiguredTimeFromNow
-	} else if deltaExpirytime5Min.After(time.Now().UTC()) {
-		return deltaExpirytime5Min
 	} else {
 		return time.Now().UTC().Add(constants.TIME_1_MINUTES)
 	}

@@ -37,7 +37,9 @@ const (
 	BYTES_2KB = 2048 // 2K
 
 	// Time
-	TIME_1_MINUTES  = time.Minute * 1
-	TIME_5_MINUTES  = time.Minute * 5
-	TIME_60_MINITES = time.Minute * 60
+	TIME_1_MINUTES = time.Minute * 1
+	TIME_5_MINUTES = time.Minute * 5
+
+	// Default token refresh percentage
+	DEFAULT_TOKEN_REFRESH_PERCENTAGE = 10 // 10% before expiry
 )
