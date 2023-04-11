@@ -53,19 +53,23 @@ func main() {
 	// Create handler to fetch tokens
 	handler := createHandlerWithTokenProvider(configuration, audience, targetHost, logger)
 
-	// Note: These (Health and Readiness) check whether app can fetch a token with provided identity,
-	// it does not evaluate end-to-end authentication and authorization of acquired tokens.
-	// Health check handler
-	http.HandleFunc("/health", handler.ReadinessCheck)
+	if handler == nil {
+		log.Fatal("Initialization failed!!!")
+	} else {
+		// Note: These (Health and Readiness) check whether app can fetch a token with provided identity,
+		// it does not evaluate end-to-end authentication and authorization of acquired tokens.
+		// Health check handler
+		http.HandleFunc("/health", handler.ReadinessCheck)
 
-	// Readiness check handler
-	http.HandleFunc("/ready", handler.ReadinessCheck)
+		// Readiness check handler
+		http.HandleFunc("/ready", handler.ReadinessCheck)
 
-	// Reverse proxy handler
-	http.HandleFunc("/", handler.ProxyRequest)
+		// Reverse proxy handler
+		http.HandleFunc("/", handler.ProxyRequest)
 
-	// Listen at specified port
-	log.Fatal(http.ListenAndServe(":"+listeningPort, nil))
+		// Listen at specified port
+		log.Fatal(http.ListenAndServe(":"+listeningPort, nil))
+	}
 }
 
 // Creates handler with token provider
