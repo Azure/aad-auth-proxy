@@ -7,8 +7,7 @@ const (
 	VERSION = "v0.1.0"
 
 	// Telemetry
-	SERVICE_TELEMETRY_KEY      = "aad_auth_proxy"
-	DEFAULT_GRPC_OTEL_ENDPOINT = "http://localhost:4317"
+	SERVICE_TELEMETRY_KEY = "aad_auth_proxy"
 
 	// Telemetry metric names
 	METRIC_REQUESTS_TOTAL                = "aad_auth_proxy_requests_total"
