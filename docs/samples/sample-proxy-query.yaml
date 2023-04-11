@@ -34,7 +34,7 @@ spec:
                 value: userAssigned
               - name: AAD_CLIENT_ID
                 value: a711a6a4-1052-44eb-bcad-182e2b604c7f
-              - name: AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES
+              - name: AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE
                 value: "10"
               - name: OTEL_GRPC_ENDPOINT
                 value: "otel-collector.observability.svc.cluster.local:4317"

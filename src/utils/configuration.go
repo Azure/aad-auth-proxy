@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -14,7 +13,7 @@ type IConfiguration interface {
 	GetAadClientId() string
 	GetAadClientCertPath() string
 	GetAadTenantId() string
-	GetAadTokenRefreshDurationInMinutes() time.Duration
+	GetAadTokenRefreshDurationInPercentage() uint8
 	GetIdentityType() string
 	GetListeningPort() string
 	GetAudience() string
@@ -31,11 +30,11 @@ type configuration struct {
 }
 
 type identityConfiguration struct {
-	identityType                     string
-	aadClientId                      string
-	aadClientCertificatePath         string
-	aadTenantId                      string
-	aadTokenRefreshDurationInMinutes time.Duration
+	identityType                        string
+	aadClientId                         string
+	aadClientCertificatePath            string
+	aadTenantId                         string
+	aadTokenRefreshDurationInPercentage uint8
 }
 
 type hostConfiguration struct {
@@ -53,16 +52,16 @@ func NewConfiguration() *configuration {
 	config := readConfigurationsFromEnv()
 
 	fields := log.Fields{
-		"AAD_CLIENT_ID":                         config.identityConfig.aadClientId,
-		"AAD_TENANT_ID":                         config.identityConfig.aadTenantId,
-		"AAD_CLIENT_CERTIFICATE_PATH":           config.identityConfig.aadClientCertificatePath,
-		"AAD_TOKEN_REFRESH_DURATION_IN_MINUTES": config.identityConfig.aadTokenRefreshDurationInMinutes,
-		"IDENTITY_TYPE":                         config.identityConfig.identityType,
-		"LISTENING_PORT":                        config.listeningPort,
-		"AUDIENCE":                              config.hostConfig.audience,
-		"TARGET_HOST":                           config.hostConfig.targetHost,
-		"OTEL_SERVICE_NAME":                     config.telemetryConfig.otelServiceName,
-		"OTEL_GRPC_ENDPOINT":                    config.telemetryConfig.otelEndpoint,
+		"AAD_CLIENT_ID":                            config.identityConfig.aadClientId,
+		"AAD_TENANT_ID":                            config.identityConfig.aadTenantId,
+		"AAD_CLIENT_CERTIFICATE_PATH":              config.identityConfig.aadClientCertificatePath,
+		"AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE": config.identityConfig.aadTokenRefreshDurationInPercentage,
+		"IDENTITY_TYPE":                            config.identityConfig.identityType,
+		"LISTENING_PORT":                           config.listeningPort,
+		"AUDIENCE":                                 config.hostConfig.audience,
+		"TARGET_HOST":                              config.hostConfig.targetHost,
+		"OTEL_SERVICE_NAME":                        config.telemetryConfig.otelServiceName,
+		"OTEL_GRPC_ENDPOINT":                       config.telemetryConfig.otelEndpoint,
 	}
 
 	if config.listeningPort == "" {
@@ -80,7 +79,7 @@ func readConfigurationsFromEnv() *configuration {
 	aadClientId := os.Getenv("AAD_CLIENT_ID")
 	aadClientCertificatePath := os.Getenv("AAD_CLIENT_CERTIFICATE_PATH")
 	aadTenantId := os.Getenv("AAD_TENANT_ID")
-	aadTokenRefreshDurationInMinutesStr := os.Getenv("AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES")
+	aadTokenRefreshDurationInPercentageStr := os.Getenv("AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE")
 	identityType := os.Getenv("IDENTITY_TYPE")
 	listeningPort := os.Getenv("LISTENING_PORT")
 	otelServiceName := os.Getenv("OTEL_SERVICE_NAME")
@@ -88,26 +87,30 @@ func readConfigurationsFromEnv() *configuration {
 
 	// Identity
 	identityType = strings.ToLower(identityType)
-	aadTokenRefreshDurationInMinutes := constants.TIME_60_MINITES
+	var aadTokenRefreshDurationInPercentage uint8 = constants.DEFAULT_TOKEN_REFRESH_PERCENTAGE
 
 	// Parse refresh interval if passed as parameter
-	if aadTokenRefreshDurationInMinutesStr != "" {
-		value, err := strconv.ParseInt(aadTokenRefreshDurationInMinutesStr, 10, 32)
+	if aadTokenRefreshDurationInPercentageStr != "" {
+		value, err := strconv.ParseUint(aadTokenRefreshDurationInPercentageStr, 10, 64)
 		if err != nil {
 			log.WithField(
-				"AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES",
-				aadTokenRefreshDurationInMinutesStr).Warningln("failed to parse AAD_TOKEN_REFRESH_INTERVAL_IN_MINUTES, using default value of 60 minutes")
+				"AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE",
+				aadTokenRefreshDurationInPercentageStr).Warningln("failed to parse AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE, using default value of 1% of time before expiry")
+		} else if value <= 0 || value >= 100 {
+			log.WithField(
+				"AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE",
+				value).Warningln("AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE should be non-zero number from 1 to 99, using default value of 1% of time before expiry")
 		} else {
-			aadTokenRefreshDurationInMinutes = time.Minute * time.Duration(value)
+			aadTokenRefreshDurationInPercentage = uint8(value)
 		}
 	}
 
 	identityConfig := &identityConfiguration{
-		identityType:                     identityType,
-		aadClientId:                      aadClientId,
-		aadClientCertificatePath:         aadClientCertificatePath,
-		aadTenantId:                      aadTenantId,
-		aadTokenRefreshDurationInMinutes: aadTokenRefreshDurationInMinutes,
+		identityType:                        identityType,
+		aadClientId:                         aadClientId,
+		aadClientCertificatePath:            aadClientCertificatePath,
+		aadTenantId:                         aadTenantId,
+		aadTokenRefreshDurationInPercentage: aadTokenRefreshDurationInPercentage,
 	}
 
 	// Auth
@@ -122,9 +125,6 @@ func readConfigurationsFromEnv() *configuration {
 	}
 
 	// Telemetry
-	if otelEndpoint == "" {
-		otelEndpoint = constants.DEFAULT_GRPC_OTEL_ENDPOINT
-	}
 	if otelServiceName == "" {
 		otelServiceName = constants.SERVICE_TELEMETRY_KEY
 	}
@@ -154,8 +154,8 @@ func (config *configuration) GetAadTenantId() string {
 	return config.identityConfig.aadTenantId
 }
 
-func (config *configuration) GetAadTokenRefreshDurationInMinutes() time.Duration {
-	return config.identityConfig.aadTokenRefreshDurationInMinutes
+func (config *configuration) GetAadTokenRefreshDurationInPercentage() uint8 {
+	return config.identityConfig.aadTokenRefreshDurationInPercentage
 }
 
 func (config *configuration) GetIdentityType() string {

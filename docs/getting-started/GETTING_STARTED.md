@@ -25,7 +25,7 @@ Below sample command can be modified with user specific parameters and deployed 
 | AAD_CLIENT_ID | aadClientId | this is the client_id of the identity used. This is needed for userassigned and aadapplication identity types. Check [Fetch parameters for identities](IDENTITY.md#fetch-parameters-for-identities) on how to fetch client_id | | Yes for userassigned and aadapplication |
 | AAD_TENANT_ID | aadTenantId | this is the tenant_id of the identity used. This is needed for aadapplication identity types. Check [Fetch parameters for identities](IDENTITY.md#fetch-parameters-for-identities) on how to fetch tenant_id | | Yes for aadapplication |
 | AAD_CLIENT_CERTIFICATE_PATH | aadClientCertificatePath | this is the path where proxy can find the certificate for aadapplication. This path should be accessible by proxy and should be a either a pfx or pem certificate containing private key. Check [CSI driver](IDENTITY.md#set-up-csi-driver-for-certificate-management) for managing certificates. | | Yes for aadapplication |
-| AAD_TOKEN_REFRESH_DURATION_IN_MINUTES | aadTokenRefreshIntervalInMinutes | token will be refreshed based on this duration. Default value is 1 hour. | | No |
+| AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE | aadTokenRefreshIntervalInMinutes | token will be refreshed based on the percentage of time till token expiry. Default value is 10% time before expiry. | | No |
 | AUDIENCE | audience | this will be the audience for the token | | No |
 | LISTENING_PORT | listeningPort | proxy will be listening on this port | | Yes |
 | OTEL_SERVICE_NAME | otelServiceName | this will be set as the service name for OTEL traces and metrics. Default value is aad_auth_proxy | | No |
