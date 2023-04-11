@@ -29,7 +29,7 @@ type identity struct {
 type tokenProvider struct {
 	token                            string
 	ctx                              context.Context
-  lastError                        error
+	lastError                        error
 	userConfiguredDurationPercentage uint8
 	refreshDuration                  time.Duration
 	credentialClient                 azcore.TokenCredential
@@ -79,7 +79,7 @@ func NewTokenProvider(audience string, config utils.IConfiguration, certManager 
 	tokenProvider := &tokenProvider{
 		ctx:                              context.Background(),
 		token:                            "",
-    lastError:                        nil,
+		lastError:                        nil,
 		userConfiguredDurationPercentage: userConfiguredDurationPercentage,
 		credentialClient:                 cred,
 		options:                          &policy.TokenRequestOptions{Scopes: []string{audience}},
@@ -187,8 +187,15 @@ func (tokenProvider *tokenProvider) updateRefreshDuration(accessToken azcore.Acc
 func (tokenProvider *tokenProvider) getRefreshDuration(accessToken azcore.AccessToken) time.Time {
 	tokenExpiryTimestamp := accessToken.ExpiresOn.UTC()
 	userConfiguredTimeFromNow := time.Now().UTC().Add(time.Duration(100-tokenProvider.userConfiguredDurationPercentage) * accessToken.ExpiresOn.Sub(time.Now()) / 100)
+	// 10 seconds before now
+	thresholdTimestamp := time.Now().UTC().Add(-10 * time.Second)
 
-	if userConfiguredTimeFromNow.Before(tokenExpiryTimestamp) {
+	// Some times the token expiry time is less than 10 seconds from now or we received an expired token.
+	// In that case, we will refresh the token in 1 minute.
+	if userConfiguredTimeFromNow.Before(thresholdTimestamp) {
+		return time.Now().UTC().Add(constants.TIME_1_MINUTES)
+	} else if userConfiguredTimeFromNow.Before(tokenExpiryTimestamp) {
+		// If the user configured time is less than the token expiry time, we will use the user configured time.
 		return userConfiguredTimeFromNow
 	} else {
 		return time.Now().UTC().Add(constants.TIME_1_MINUTES)

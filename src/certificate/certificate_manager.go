@@ -3,6 +3,7 @@ package certificate
 import (
 	"crypto/md5"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"io/ioutil"
 	"path"
@@ -85,6 +86,14 @@ func (manager *CertificateManager) fetchTlsCertificateFromPem(content []byte) (t
 		log.WithFields(log.Fields{
 			"certificatePath": manager.path,
 		}).Error("failed to decode certificate: ", err)
+		return nil, err
+	}
+
+	certificate.Leaf, err = x509.ParseCertificate(certificate.Certificate[0])
+	if err != nil {
+		log.WithFields(log.Fields{
+			"certificatePath": manager.path,
+		}).Error("failed to parse certificate: ", err)
 		return nil, err
 	}
 

@@ -143,7 +143,7 @@ func (handler *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 // TokenProvider check
 // If token provider is not instantiated, cannot fetch token, so fail request
 func (handler *Handler) checkTokenProvider(ctx context.Context) error {
-	if handler == nil || handler.tokenProvider == nil {
+	if handler.tokenProvider == nil {
 		token, err := handler.tokenProvider.GetAccessToken()
 		if len(token) == 0 || err != nil {
 			// Start tracing
