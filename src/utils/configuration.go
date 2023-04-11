@@ -125,9 +125,6 @@ func readConfigurationsFromEnv() *configuration {
 	}
 
 	// Telemetry
-	if otelEndpoint == "" {
-		otelEndpoint = constants.DEFAULT_GRPC_OTEL_ENDPOINT
-	}
 	if otelServiceName == "" {
 		otelServiceName = constants.SERVICE_TELEMETRY_KEY
 	}

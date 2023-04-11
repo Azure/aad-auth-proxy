@@ -29,6 +29,7 @@ type identity struct {
 type tokenProvider struct {
 	token                            string
 	ctx                              context.Context
+  lastError                        error
 	userConfiguredDurationPercentage uint8
 	refreshDuration                  time.Duration
 	credentialClient                 azcore.TokenCredential
@@ -78,6 +79,7 @@ func NewTokenProvider(audience string, config utils.IConfiguration, certManager 
 	tokenProvider := &tokenProvider{
 		ctx:                              context.Background(),
 		token:                            "",
+    lastError:                        nil,
 		userConfiguredDurationPercentage: userConfiguredDurationPercentage,
 		credentialClient:                 cred,
 		options:                          &policy.TokenRequestOptions{Scopes: []string{audience}},
@@ -98,8 +100,8 @@ func NewTokenProvider(audience string, config utils.IConfiguration, certManager 
 	return tokenProvider, nil
 }
 
-func (tokenProvider *tokenProvider) GetAccessToken() string {
-	return tokenProvider.token
+func (tokenProvider *tokenProvider) GetAccessToken() (string, error) {
+	return tokenProvider.token, tokenProvider.lastError
 }
 
 func (tokenProvider *tokenProvider) refreshAADToken() error {
@@ -128,8 +130,14 @@ func (tokenProvider *tokenProvider) refreshAADToken() error {
 		span.SetStatus(codes.Error, "failed to refresh token")
 		intrument.Add(ctx, 1, attributes...)
 
+		// Set last error so that this can be returned back when the token is requested
+		tokenProvider.lastError = err
+
 		return err
 	}
+
+	// Reset last error
+	tokenProvider.lastError = nil
 
 	attributes = append(attributes, attribute.Bool("is_success", true))
 	intrument.Add(ctx, 1, attributes...)

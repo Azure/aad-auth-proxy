@@ -16,22 +16,26 @@ import (
 )
 
 func InitializeTracer(logger contracts.ILogger, configuration utils.IConfiguration) (func(context.Context) error, error) {
-	// Create a new otlptrace exporter
-	exporter, err := otlptrace.New(context.Background(),
-		otlptracegrpc.NewClient(
-			otlptracegrpc.WithInsecure(),
-			otlptracegrpc.WithEndpoint(configuration.GetOtelEndpoint()),
-		),
-	)
-	if err != nil {
-		logger.Fatal(err)
+	var traceOptions []trace.TracerProviderOption
+	traceOptions = append(traceOptions, trace.WithResource(NewResource(configuration.GetOtelServiceName())))
+
+	// Add exporter only if endpoint is set
+	if configuration.GetOtelEndpoint() != "" {
+		// Create a new otlptrace exporter
+		exporter, err := otlptrace.New(context.Background(),
+			otlptracegrpc.NewClient(
+				otlptracegrpc.WithInsecure(),
+				otlptracegrpc.WithEndpoint(configuration.GetOtelEndpoint()),
+			),
+		)
+		if err != nil {
+			logger.Fatal(err)
+		}
+		traceOptions = append(traceOptions, trace.WithBatcher(exporter))
 	}
 
 	// Create a trace provider for otel
-	traceProvider := trace.NewTracerProvider(
-		trace.WithBatcher(exporter),
-		trace.WithResource(NewResource(configuration.GetOtelServiceName())),
-	)
+	traceProvider := trace.NewTracerProvider(traceOptions...)
 
 	otel.SetTracerProvider(traceProvider)
 	otel.SetTextMapPropagator(propagation.TraceContext{})
@@ -40,21 +44,25 @@ func InitializeTracer(logger contracts.ILogger, configuration utils.IConfigurati
 }
 
 func InitializeMetric(logger contracts.ILogger, configuration utils.IConfiguration) (func(context.Context) error, error) {
-	// Create a new otlpmetric exporter
-	exporter, err := otlpmetricgrpc.New(context.Background(),
-		otlpmetricgrpc.WithInsecure(),
-		otlpmetricgrpc.WithEndpoint(configuration.GetOtelEndpoint()),
-	)
+	var metricOptions []metric.Option
+	metricOptions = append(metricOptions, metric.WithResource(NewResource(configuration.GetOtelServiceName())))
 
-	if err != nil {
-		logger.Fatal(err)
+	// Add exporter only if endpoint is set
+	if configuration.GetOtelEndpoint() != "" {
+		// Create a new otlpmetric exporter
+		exporter, err := otlpmetricgrpc.New(context.Background(),
+			otlpmetricgrpc.WithInsecure(),
+			otlpmetricgrpc.WithEndpoint(configuration.GetOtelEndpoint()),
+		)
+
+		if err != nil {
+			logger.Fatal(err)
+		}
+		metricOptions = append(metricOptions, metric.WithReader(metric.NewPeriodicReader(exporter)))
 	}
 
 	// Create a metric provider for otel
-	metricProvider := metric.NewMeterProvider(
-		metric.WithResource(NewResource(configuration.GetOtelServiceName())),
-		metric.WithReader(metric.NewPeriodicReader(exporter)),
-	)
+	metricProvider := metric.NewMeterProvider(metricOptions...)
 
 	global.SetMeterProvider(metricProvider)
 
