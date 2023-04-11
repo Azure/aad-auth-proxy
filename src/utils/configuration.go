@@ -87,7 +87,7 @@ func readConfigurationsFromEnv() *configuration {
 
 	// Identity
 	identityType = strings.ToLower(identityType)
-	var aadTokenRefreshDurationInPercentage uint8 = 1
+	var aadTokenRefreshDurationInPercentage uint8 = constants.DEFAULT_TOKEN_REFRESH_PERCENTAGE
 
 	// Parse refresh interval if passed as parameter
 	if aadTokenRefreshDurationInPercentageStr != "" {
