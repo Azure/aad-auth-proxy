@@ -9,6 +9,8 @@ Azure Active Directory authentication proxy is an http proxy that is design to a
 
 Some usage examples would be to allow Kubecost to read Prometheus metrics stored in [Azure Managed Prometheus](https://learn.microsoft.com/azure/azure-monitor/essentials/prometheus-metrics-overview), ingest metrics via [OTEL collector](https://github.com/open-telemetry/opentelemetry-collector) through Prometheus Remote Write exporter into [Azure Monitor Workspace](https://learn.microsoft.com/azure/azure-monitor/essentials/azure-monitor-workspace-overview) and others.
 
+Check [release notes](RELEASENOTES.md) for link to publicly available images.
+
 ## Getting Started
 This can be deployed in custom templates using release image as a side car or a service. This can be deployed using helm chart as well, which will be deployed as a service. Detailed instructions on how to deploy can be found [here](./docs/getting-started/GETTING_STARTED.md).
 
