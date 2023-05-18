@@ -1,0 +1,34 @@
+version: '1'
+services:
+  azuremonitor-ingestion-proxy:
+    image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:aad-auth-proxy-0.1.0-main-04-11-2023-623473b0
+    restart: always
+    volumes:
+      - ./:/certs
+    ports:
+      - "8081:8081"
+    environment:
+      AUDIENCE: "https://monitor.azure.com/.default"
+      TARGET_HOST: "https://azure-monitor-workspace.eastus-1.metrics.ingest.monitor.azure.com"
+      LISTENING_PORT: "8081"
+      IDENTITY_TYPE: "aadApplication"
+      AAD_CLIENT_ID: "a711a6a4-1052-44eb-aec8-182e2b604c7f"
+      AAD_TENANT_ID: "f511a6a4-1052-44eb-aec8-182e2b604c7f"
+      AAD_CLIENT_CERTIFICATE_PATH: "/certs/AuthProxyPem.pem"
+  azuremonitor-query-proxy:
+    image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:aad-auth-proxy-0.1.0-main-04-11-2023-623473b0
+    restart: always
+    volumes:
+      - ./:/certs
+    ports:
+      - "8082:8082"
+    environment:
+      AUDIENCE: "https://prometheus.monitor.azure.com/.default"
+      TARGET_HOST: "https://azure-monitor-workspace.eastus-1.metrics.ingest.monitor.azure.com"
+      LISTENING_PORT: "8082"
+      IDENTITY_TYPE: "aadApplication"
+      AAD_CLIENT_ID: "a711a6a4-1052-44eb-aec8-182e2b604c7f"
+      AAD_TENANT_ID: "f511a6a4-1052-44eb-aec8-182e2b604c7f"
+      AAD_CLIENT_CERTIFICATE_PATH: "/certs/AuthProxyPem.pem"
+
+    

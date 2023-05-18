@@ -17,10 +17,10 @@ replicaCount: 1
 
 image:
   # TODO: Change this to mcr, when ready
-  repository: ${MCR_REGISTRY}${MCR_REPOSITORY}
+  repository: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ${IMAGE_TAG}
+  tag: 0.1.0-main-04-11-2023-623473b0
 
 imagePullSecrets: []
 nameOverride: ""
