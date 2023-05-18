@@ -53,11 +53,11 @@ spec:
             {{- end}}
             {{- end }}
             - name: AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE
-              value: {{ optional .Values.aadTokenRefreshIntervalInMinutes | toString | trim | quote }}
+              value: {{ .Values.aadTokenRefreshIntervalInPercentage | toString | trim | quote }}
             - name: OTEL_SERVICE_NAME
-              value: {{ optional .Values.otelServiceName | toString | trim | quote }}
+              value: {{ .Values.otelServiceName | toString | trim | quote }}
             - name: OTEL_GRPC_ENDPOINT
-              value: {{ optional .Values.otelGrpcEndpoint | toString | trim | quote }}
+              value: {{ .Values.otelGrpcEndpoint | toString | trim | quote }}
           livenessProbe:
             httpGet:
               path: /health

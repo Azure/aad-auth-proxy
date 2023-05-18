@@ -9,7 +9,7 @@ In this example we will deploy proxy to query Prometheus metrics from Azure Moni
     - [System identity](IDENTITY.md#system-identity)
     - [User identity](IDENTITY.md#user-identity)
     - [AAD application](IDENTITY.md#aad-application)
-5. AUDIENCE has to be "https://prometheus.monitor.azure.com" for querying metrics from Azure Monitor Workspace.
+5. AUDIENCE has to be "https://prometheus.monitor.azure.com/.default" for querying metrics from Azure Monitor Workspace.
 6. Change OTEL_GRPC_ENDPOINT to receive endpoint of OTEL collector if deployed, else remove it.
 7. Deploy proxy using command: `kubectl apply -f sample-proxy-query.yaml -n observability`
 8. Deploy Kubecost and point to this proxy for reading data.
@@ -24,7 +24,7 @@ In this example we will deploy proxy to ingest Prometheus metrics to Azure Monit
     - [System identity](IDENTITY.md#system-identity)
     - [User identity](IDENTITY.md#user-identity)
     - [AAD application](IDENTITY.md#aad-application)
-5. AUDIENCE has to be "https://monitor.azure.com" for ingesting metrics to Azure Monitor Workspace.
+5. AUDIENCE has to be "https://monitor.azure.com/.default" for ingesting metrics to Azure Monitor Workspace.
 6. Change OTEL_GRPC_ENDPOINT to receive endpoint of OTEL collector if deployed, else remove it.
 7. Deploy proxy using command: `kubectl apply -f sample-proxy-ingestion.yaml -n observability`
 8. Update Prometheus' remote write configuration to point to proxy endpoint as host and the path from "Metrics ingestion endpoint" in step 3.

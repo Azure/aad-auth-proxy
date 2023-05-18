@@ -25,7 +25,7 @@ spec:
                 containerPort: 8082
               env:
               - name: AUDIENCE
-                value: https://prometheus.monitor.azure.com
+                value: https://prometheus.monitor.azure.com/.default
               - name: TARGET_HOST
                 value: https://azure-monitor-workspace.eastus-1.metrics.ingest.monitor.azure.com
               - name: LISTENING_PORT
