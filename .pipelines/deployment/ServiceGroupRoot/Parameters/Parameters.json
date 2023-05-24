@@ -45,7 +45,7 @@
             },
             {
               "name": "AGENT_IMAGE_FULL_PATH",
-              "value": "__DESTINATION_REPO_NAME__/__AGENT_RELEASE__:__AGENT_RELEASE__-__BUILD_VERSION__"
+              "value": "__DESTINATION_REPO_NAME__/__AGENT_RELEASE__:__BUILD_VERSION__"
             }, 
             {
               "name": "BUILD_ACR",
