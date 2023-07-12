@@ -2,6 +2,7 @@ package utils
 
 import (
 	"aad-auth-proxy/constants"
+	"encoding/json"
 	"os"
 	"strconv"
 	"strings"
@@ -20,13 +21,15 @@ type IConfiguration interface {
 	GetTargetHost() string
 	GetOtelEndpoint() string
 	GetOtelServiceName() string
+	GetAdditionalHeaders() map[string]string
 }
 
 type configuration struct {
-	listeningPort   string
-	identityConfig  *identityConfiguration
-	hostConfig      *hostConfiguration
-	telemetryConfig *telemetryConfiguration
+	listeningPort     string
+	identityConfig    *identityConfiguration
+	hostConfig        *hostConfiguration
+	telemetryConfig   *telemetryConfiguration
+	additionalHeaders *additionalHeaders
 }
 
 type identityConfiguration struct {
@@ -47,6 +50,11 @@ type telemetryConfiguration struct {
 	otelServiceName string
 }
 
+type additionalHeaders struct {
+	headers    map[string]string
+	headersStr string
+}
+
 func NewConfiguration() *configuration {
 
 	config := readConfigurationsFromEnv()
@@ -62,6 +70,7 @@ func NewConfiguration() *configuration {
 		"TARGET_HOST":                              config.hostConfig.targetHost,
 		"OTEL_SERVICE_NAME":                        config.telemetryConfig.otelServiceName,
 		"OTEL_GRPC_ENDPOINT":                       config.telemetryConfig.otelEndpoint,
+		"OVERRIDE_REQUEST_HEADERS":                 config.additionalHeaders.headersStr,
 	}
 
 	if config.listeningPort == "" {
@@ -84,6 +93,7 @@ func readConfigurationsFromEnv() *configuration {
 	listeningPort := os.Getenv("LISTENING_PORT")
 	otelServiceName := os.Getenv("OTEL_SERVICE_NAME")
 	otelEndpoint := os.Getenv("OTEL_GRPC_ENDPOINT")
+	headersStr := os.Getenv("OVERRIDE_REQUEST_HEADERS")
 
 	// Identity
 	identityType = strings.ToLower(identityType)
@@ -134,11 +144,48 @@ func readConfigurationsFromEnv() *configuration {
 		otelServiceName: otelServiceName,
 	}
 
+	// Headers
+	if headersStr == "" {
+		headersStr = "{}"
+	}
+
+	additionalHeaders := parseHeaders(headersStr)
+
+	for key, value := range additionalHeaders.headers {
+		log.WithFields(log.Fields{
+			"HEADER_KEY":   key,
+			"HEADER_VALUE": value,
+		}).Infoln("Additional headers loaded")
+	}
+
 	return &configuration{
-		listeningPort:   listeningPort,
-		identityConfig:  identityConfig,
-		hostConfig:      hostConfig,
-		telemetryConfig: telemetryConfig,
+		listeningPort:     listeningPort,
+		identityConfig:    identityConfig,
+		hostConfig:        hostConfig,
+		telemetryConfig:   telemetryConfig,
+		additionalHeaders: additionalHeaders,
+	}
+}
+
+func parseHeaders(headersStr string) *additionalHeaders {
+	headers := make(map[string]string)
+	err := json.Unmarshal([]byte(headersStr), &headers)
+	if err != nil {
+		log.WithField("OVERRIDE_REQUEST_HEADERS", headersStr).Warningln("failed to parse OVERRIDE_REQUEST_HEADERS, using default value of empty map")
+		return &additionalHeaders{
+			headers:    make(map[string]string),
+			headersStr: "{}",
+		}
+	}
+
+	parsedHeadersStr, err := json.Marshal(headers)
+	if err != nil {
+		log.WithField("headers", headers).Warningln("failed to marshall")
+	}
+
+	return &additionalHeaders{
+		headers:    headers,
+		headersStr: string(parsedHeadersStr),
 	}
 }
 
@@ -180,4 +227,8 @@ func (config *configuration) GetOtelEndpoint() string {
 
 func (config *configuration) GetOtelServiceName() string {
 	return config.telemetryConfig.otelServiceName
+}
+
+func (config *configuration) GetAdditionalHeaders() map[string]string {
+	return config.additionalHeaders.headers
 }
