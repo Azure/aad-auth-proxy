@@ -55,7 +55,7 @@ func modifyRequest(request *http.Request, targetHost string, tokenProvider contr
 		attribute.String("target_host", request.URL.Host),
 		attribute.String("method", request.Method),
 		attribute.String("path", request.URL.Path),
-		attribute.String("user_agent", request.Header.Get("User-Agent")),
+		attribute.String("user_agent", request.Header.Get(constants.HEADER_USER_AGENT)),
 	}
 
 	meter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
@@ -72,9 +72,10 @@ func handleError(response http.ResponseWriter, request *http.Request, err error)
 	defer span.End()
 
 	attributes := []attribute.KeyValue{
-		attribute.String("response.status_code", response.Header().Get("Status-Code")),
-		attribute.String("response.content_type", response.Header().Get("Content-Type")),
-		attribute.String("response.content_encoding", response.Header().Get("Content-Encoding")),
+		attribute.String("response.status_code", response.Header().Get(constants.HEADER_STATUS_CODE)),
+		attribute.String("response.content_type", response.Header().Get(constants.HEADER_CONTENT_TYPE)),
+		attribute.String("response.content_encoding", response.Header().Get(constants.HEADER_CONTENT_ENCODING)),
+		attribute.String("response.request_id", response.Header().Get(constants.HEADER_REQUEST_ID)),
 		attribute.String("response.error.message", err.Error()),
 	}
 
@@ -89,7 +90,7 @@ func handleError(response http.ResponseWriter, request *http.Request, err error)
 
 	// Record metrics
 	// requests_total{target_host, method, path, user_agent, status_code}
-	status_code, err := strconv.ParseInt(response.Header().Get("Status-Code"), 10, 32)
+	status_code, err := strconv.ParseInt(response.Header().Get(constants.HEADER_STATUS_CODE), 10, 32)
 	if err != nil {
 		log.Errorln("Failed to parse status code", err)
 		status_code = 0
@@ -99,7 +100,7 @@ func handleError(response http.ResponseWriter, request *http.Request, err error)
 		attribute.String("target_host", request.URL.Host),
 		attribute.String("method", request.Method),
 		attribute.String("path", request.URL.Path),
-		attribute.String("user_agent", request.Header.Get("User-Agent")),
+		attribute.String("user_agent", request.Header.Get(constants.HEADER_USER_AGENT)),
 		attribute.Int("status_code", int(status_code)),
 	}
 
@@ -118,9 +119,10 @@ func modifyResponse(response *http.Response) (err error) {
 
 	traceAttributes := []attribute.KeyValue{
 		attribute.Int("response.status_code", response.StatusCode),
-		attribute.String("response.content_length", response.Header.Get("Content-Length")),
-		attribute.String("response.content_type", response.Header.Get("Content-Type")),
-		attribute.String("response.content_encoding", response.Header.Get("Content-Encoding")),
+		attribute.String("response.content_length", response.Header.Get(constants.HEADER_CONTENT_LENGTH)),
+		attribute.String("response.content_type", response.Header.Get(constants.HEADER_CONTENT_TYPE)),
+		attribute.String("response.content_encoding", response.Header.Get(constants.HEADER_CONTENT_ENCODING)),
+		attribute.String("response.request_id", response.Header.Get(constants.HEADER_REQUEST_ID)),
 	}
 
 	span.SetAttributes(traceAttributes...)
@@ -130,7 +132,7 @@ func modifyResponse(response *http.Response) (err error) {
 		attribute.String("target_host", response.Request.URL.Host),
 		attribute.String("method", response.Request.Method),
 		attribute.String("path", response.Request.URL.Path),
-		attribute.String("user_agent", response.Request.Header.Get("User-Agent")),
+		attribute.String("user_agent", response.Request.Header.Get(constants.HEADER_USER_AGENT)),
 		attribute.Int("status_code", response.StatusCode),
 	}
 

@@ -22,7 +22,13 @@ const (
 	HTTPS_PREFIX = "https://"
 
 	// Request Headers
-	HEADER_AUTHORIZATION = "Authorization"
+	HEADER_AUTHORIZATION    = "Authorization"
+	HEADER_REQUEST_ID       = "X-Request-ID"
+	HEADER_CONTENT_TYPE     = "Content-Type"
+	HEADER_CONTENT_LENGTH   = "Content-Length"
+	HEADER_CONTENT_ENCODING = "Content-Encoding"
+	HEADER_USER_AGENT       = "User-Agent"
+	HEADER_STATUS_CODE      = "Status-Code"
 
 	// Identity
 	SYSTEM_ASSIGNED = "systemassigned"

@@ -192,9 +192,11 @@ func (handler *Handler) failRequest(w http.ResponseWriter, r *http.Request, ctx 
 	statusCode := http.StatusServiceUnavailable
 	errorCode := "AuthenticationTokenNotFound"
 	errorMessage := err.Error()
+	requestId := r.Header.Get(constants.HEADER_REQUEST_ID)
 
 	span.SetAttributes(
 		attribute.Int("response.status_code", statusCode),
+		attribute.String("response.request_id", requestId),
 		attribute.String("response.error.code", errorCode),
 		attribute.String("response.error.message", errorMessage),
 	)
