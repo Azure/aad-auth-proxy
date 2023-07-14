@@ -30,6 +30,7 @@ Below sample command can be modified with user specific parameters and deployed 
 | LISTENING_PORT | listeningPort | proxy will be listening on this port | | Yes |
 | OTEL_SERVICE_NAME | otelServiceName | this will be set as the service name for OTEL traces and metrics. Default value is aad_auth_proxy | | No |
 | OTEL_GRPC_ENDPOINT | otelGrpcEndpoint | proxy will push OTEL telemetry to this endpoint. Default values is http://localhost:4317 | | No |
+| OVERRIDE_REQUEST_HEADERS | overrideRequestHeaders | (Experimental) proxy will override these headers while forwarding requests. This expects headers to be in JSON, example {"header1": "value1", "header2": "value2" }:  Default values is {} | | No |
 
 ## Liveness and readiness probes
 Proxy supports readiness and liveness probes. [Sample configuration](../samples/sample-proxy-deployment.yaml) uses these checks to monitor health of the proxy.

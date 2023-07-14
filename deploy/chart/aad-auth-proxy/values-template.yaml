@@ -12,6 +12,7 @@ aadClientCertificatePath: ""
 aadTokenRefreshIntervalInPercentage: "10"
 otelServiceName: "aad_auth_proxy"
 otelGrpcEndpoint: ""
+overrideRequestHeaders: "{}"
 
 replicaCount: 1
 
