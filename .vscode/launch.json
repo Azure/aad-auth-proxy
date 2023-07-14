@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid": "830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "aad-auth-proxy",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}/src/main.go",
+            "env": {
+                // Set below env variable to run the proxy in debug mode
+                "AUDIENCE": "",
+                "TARGET_HOST": "",
+                "LISTENING_PORT": "8082",
+                "IDENTITY_TYPE": "aadApplication",
+                "AAD_CLIENT_ID": "",
+                "AAD_TENANT_ID": "",
+                "AAD_CLIENT_CERTIFICATE_PATH": "",
+            },
+            "args": []
+        }
+    ]
+}

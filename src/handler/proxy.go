@@ -3,8 +3,11 @@ package handler
 import (
 	"aad-auth-proxy/constants"
 	"aad-auth-proxy/contracts"
+	"aad-auth-proxy/utils"
+	"bytes"
+	"context"
 	"errors"
-	"io"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -157,6 +160,7 @@ func modifyResponse(response *http.Response) (err error) {
 		"Request":       response.Request.URL.String(),
 		"StatusCode":    response.StatusCode,
 		"ContentLength": response.ContentLength,
+		"RequestID":     response.Header.Get(constants.HEADER_REQUEST_ID),
 	}).Infoln("Successfully sent request, returning response back.")
 
 	response.Header.Set("Status-Code", strconv.Itoa(response.StatusCode))
@@ -167,15 +171,42 @@ func modifyResponse(response *http.Response) (err error) {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "Non 2xx response from target host")
 
-		// Read 2KB of data
-		limitedReader := &io.LimitedReader{R: response.Body, N: constants.BYTES_2KB}
-		responseBody, err := ioutil.ReadAll(limitedReader)
-		if err != nil {
-			return err
-		}
-
-		log.Println("Error response body: ", string(responseBody[:]))
+		logResponse(ctx, response)
 	}
 
 	return nil
+}
+
+// This will check encoding, if encoding is gzip or deflate, it will decode response body and log it
+func logResponse(ctx context.Context, response *http.Response) {
+	var responseBody []byte
+	var err error
+	var buffer bytes.Buffer
+
+	encoding := response.Header.Get(constants.HEADER_CONTENT_ENCODING)
+	encoderDecoder := utils.NewEncoderDecoder()
+
+	responseBody, err = encoderDecoder.Decode(encoding, response.Body)
+	if err != nil {
+		log.Errorln("Failed to decode response body", err)
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"Encoding": encoding,
+	}).Errorln("Error response body: ", string(responseBody[:]))
+
+	buffer, err = encoderDecoder.Encode(encoding, responseBody)
+	if err != nil {
+		log.Errorln("Failed to encode response body", err)
+		return
+	}
+
+	// Set response body back
+	response.Body = ioutil.NopCloser(bytes.NewReader(buffer.Bytes()))
+
+	// Set all headers back
+	response.ContentLength = int64(buffer.Len())
+	response.Header.Set(constants.HEADER_CONTENT_LENGTH, fmt.Sprint(buffer.Len()))
+	response.Header.Set(constants.HEADER_CONTENT_ENCODING, encoding)
 }

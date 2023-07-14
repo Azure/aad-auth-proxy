@@ -30,6 +30,10 @@ const (
 	HEADER_USER_AGENT       = "User-Agent"
 	HEADER_STATUS_CODE      = "Status-Code"
 
+	// Encoding
+	ENCODING_GZIP         = "gzip"
+	ENCODING_DEFLATE_ZLIB = "zlib"
+
 	// Identity
 	SYSTEM_ASSIGNED = "systemassigned"
 	USER_ASSIGNED   = "userassigned"
