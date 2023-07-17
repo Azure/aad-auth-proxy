@@ -14,7 +14,7 @@ import (
 type EncoderDecoder struct {
 }
 
-func NewEncoderDecoder() contracts.IEncodeDecode {
+func NewEncoderDecoder() contracts.IEncoderDecoder {
 	return &EncoderDecoder{}
 }
 
