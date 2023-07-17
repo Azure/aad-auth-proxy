@@ -58,6 +58,8 @@ spec:
               value: {{ .Values.otelServiceName | toString | trim | quote }}
             - name: OTEL_GRPC_ENDPOINT
               value: {{ .Values.otelGrpcEndpoint | toString | trim | quote }}
+            - name: OVERRIDE_REQUEST_HEADERS
+              value: {{ .Values.overrideRequestHeaders | toString | trim | quote }}
           livenessProbe:
             httpGet:
               path: /health

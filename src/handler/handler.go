@@ -21,10 +21,11 @@ import (
 
 // This manages token provider handler
 type Handler struct {
-	targetHost    string
-	proxy         *httputil.ReverseProxy
-	tokenProvider contracts.ITokenProvider
-	configuration utils.IConfiguration
+	targetHost      string
+	proxy           *httputil.ReverseProxy
+	tokenProvider   contracts.ITokenProvider
+	configuration   utils.IConfiguration
+	overrideHeaders map[string]string
 }
 
 // Creates a new handler
@@ -41,11 +42,18 @@ func NewHandler(proxy *httputil.ReverseProxy, tokenProvider contracts.ITokenProv
 		return nil, errors.New("configuration cannot be nil")
 	}
 
+	var overrideHeaders map[string]string = nil
+	additionalheaders := configuration.GetAdditionalHeaders()
+	if additionalheaders != nil && len(additionalheaders) > 0 {
+		overrideHeaders = additionalheaders
+	}
+
 	return &Handler{
-		targetHost:    configuration.GetTargetHost(),
-		proxy:         proxy,
-		tokenProvider: tokenProvider,
-		configuration: configuration,
+		targetHost:      configuration.GetTargetHost(),
+		proxy:           proxy,
+		tokenProvider:   tokenProvider,
+		configuration:   configuration,
+		overrideHeaders: overrideHeaders,
 	}, nil
 }
 
@@ -93,6 +101,13 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 	// Add authorization header
 	token, _ := handler.tokenProvider.GetAccessToken()
 	r.Header.Set(constants.HEADER_AUTHORIZATION, "Bearer "+token)
+
+	// Add additional headers
+	if handler.overrideHeaders != nil {
+		for key, value := range handler.overrideHeaders {
+			r.Header.Set(key, value)
+		}
+	}
 
 	// Start timer for calculating request duration
 	startTime := time.Now()
@@ -177,9 +192,11 @@ func (handler *Handler) failRequest(w http.ResponseWriter, r *http.Request, ctx 
 	statusCode := http.StatusServiceUnavailable
 	errorCode := "AuthenticationTokenNotFound"
 	errorMessage := err.Error()
+	requestId := r.Header.Get(constants.HEADER_REQUEST_ID)
 
 	span.SetAttributes(
 		attribute.Int("response.status_code", statusCode),
+		attribute.String("response.request_id", requestId),
 		attribute.String("response.error.code", errorCode),
 		attribute.String("response.error.message", errorMessage),
 	)
