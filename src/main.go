@@ -10,6 +10,7 @@ import (
 	"aad-auth-proxy/utils"
 	"context"
 	"net/http"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -50,26 +51,36 @@ func main() {
 		}
 	}()
 
-	// Create handler to fetch tokens
-	handler := createHandlerWithTokenProvider(configuration, audience, targetHost, logger)
+	var handler *handler.Handler
 
-	if handler == nil {
-		log.Fatal("Initialization failed!!!")
-	} else {
-		// Note: These (Health and Readiness) check whether app can fetch a token with provided identity,
-		// it does not evaluate end-to-end authentication and authorization of acquired tokens.
-		// Health check handler
-		http.HandleFunc("/health", handler.ReadinessCheck)
+	for {
+		log.Debugln(("Attempting to initialize Handler with Token Provider"))
 
-		// Readiness check handler
-		http.HandleFunc("/ready", handler.ReadinessCheck)
+		// Create handler to fetch tokens
+		handler = createHandlerWithTokenProvider(configuration, audience, targetHost, logger)
 
-		// Reverse proxy handler
-		http.HandleFunc("/", handler.ProxyRequest)
-
-		// Listen at specified port
-		log.Fatal(http.ListenAndServe(":"+listeningPort, nil))
+		if handler == nil {
+			log.Error("Handler initialization failed! Retrying in 3 seconds.")
+			time.Sleep(3 * time.Second)
+		} else {
+			log.Debugln("Handler successfully initialized.")
+			break
+		}
 	}
+
+	// Note: These (Health and Readiness) check whether app can fetch a token with provided identity,
+	// it does not evaluate end-to-end authentication and authorization of acquired tokens.
+	// Health check handler
+	http.HandleFunc("/health", handler.ReadinessCheck)
+
+	// Readiness check handler
+	http.HandleFunc("/ready", handler.ReadinessCheck)
+
+	// Reverse proxy handler
+	http.HandleFunc("/", handler.ProxyRequest)
+
+	// Listen at specified port
+	log.Fatal(http.ListenAndServe(":"+listeningPort, nil))
 }
 
 // Creates handler with token provider
