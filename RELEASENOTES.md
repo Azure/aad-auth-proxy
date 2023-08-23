@@ -1,5 +1,12 @@
 # AAD Auth Proxy
 
+## Release 08-23-2023
+* Image: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-08-23-2023-5988d874`
+* Helm chart: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart/aad-auth-proxy:0.1.0-main-08-23-2023-5988d874`
+* Change log:
+    * Retry initialization indefinitely on failure
+    * Return 503 on failure to establish connection with remote host
+
 ## Release 07-17-2023
 * Image: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-07-17-2023-841abb6f`
 * Helm chart: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart/aad-auth-proxy:0.1.0-main-07-17-2023-841abb6f`

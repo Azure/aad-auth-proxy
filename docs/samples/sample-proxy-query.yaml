@@ -18,7 +18,7 @@ spec:
         spec:
             containers:
             - name: aad-auth-proxy
-              image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-07-17-2023-841abb6f
+              image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-08-23-2023-5988d874
               imagePullPolicy: Always
               ports:
               - name: auth-port
