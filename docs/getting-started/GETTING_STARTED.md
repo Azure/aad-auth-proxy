@@ -13,7 +13,7 @@ This can be deployed in custom templates using release image or as helm chart. B
 
 Below sample command can be modified with user specific parameters and deployed as a helm chart.
 
-`helm install aad-auth-proxy oci://mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart/aad-auth-proxy --version 0.1.0-main-05-24-2023-b911fe1c -n observability --set targetHost=https://azure-monitor-workspace.eastus.prometheus.monitor.azure.com --set identityType=userAssigned --set aadClientId=a711a6a4-1052-44eb-aec8-182e2b604c7f --set audience=https://monitor.azure.com/.default`
+`helm install aad-auth-proxy oci://mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart/aad-auth-proxy --version 0.1.0-main-07-17-2023-841abb6f -n observability --set targetHost=https://azure-monitor-workspace.eastus.prometheus.monitor.azure.com --set identityType=userAssigned --set aadClientId=a711a6a4-1052-44eb-aec8-182e2b604c7f --set audience=https://monitor.azure.com/.default`
 
 
 ## Parameters
