@@ -47,6 +47,7 @@ const (
 	BYTES_2KB = 2048 // 2K
 
 	// Time
+	TIME_5_SECONDS = time.Second * 5
 	TIME_1_MINUTES = time.Minute * 1
 	TIME_5_MINUTES = time.Minute * 5
 

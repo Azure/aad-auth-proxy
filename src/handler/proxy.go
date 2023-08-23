@@ -69,7 +69,7 @@ func modifyRequest(request *http.Request, targetHost string, tokenProvider contr
 }
 
 // This will be called when there is an error in forwarding the request
-func handleError(response http.ResponseWriter, request *http.Request, err error) {
+func handleError(response http.ResponseWriter, request *http.Request, response_err error) {
 	// Record traces
 	ctx, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(request.Context(), "handleError")
 	defer span.End()
@@ -79,24 +79,24 @@ func handleError(response http.ResponseWriter, request *http.Request, err error)
 		attribute.String("response.content_type", response.Header().Get(constants.HEADER_CONTENT_TYPE)),
 		attribute.String("response.content_encoding", response.Header().Get(constants.HEADER_CONTENT_ENCODING)),
 		attribute.String("response.request_id", response.Header().Get(constants.HEADER_REQUEST_ID)),
-		attribute.String("response.error.message", err.Error()),
+		attribute.String("response.error.message", response_err.Error()),
 	}
 
 	span.SetAttributes(attributes...)
-	span.RecordError(err)
+	span.RecordError(response_err)
 	span.SetStatus(codes.Error, "failed to forward request")
 
 	// Log error
 	log.WithFields(log.Fields{
 		"Request": request.URL.String(),
-	}).Errorln("Request failed", err)
+	}).Errorln("Request failed", response_err)
 
 	// Record metrics
 	// requests_total{target_host, method, path, user_agent, status_code}
 	status_code, err := strconv.ParseInt(response.Header().Get(constants.HEADER_STATUS_CODE), 10, 32)
 	if err != nil {
-		log.Errorln("Failed to parse status code", err)
-		status_code = 0
+		log.Errorln("Failed to parse status code, returning status code 503")
+		status_code = http.StatusServiceUnavailable
 	}
 
 	metricAttributes := []attribute.KeyValue{
@@ -112,6 +112,8 @@ func handleError(response http.ResponseWriter, request *http.Request, err error)
 	if err == nil {
 		requestCountIntrument.Add(ctx, 1, metricAttributes...)
 	}
+
+	FailRequest(response, request, int(status_code), response_err.Error(), ctx, response_err)
 }
 
 // This will be called once we receive response from targetHost
