@@ -1,7 +1,7 @@
 version: '1'
 services:
   azuremonitor-ingestion-proxy:
-    image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-05-24-2023-b911fe1c
+    image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-07-17-2023-841abb6f
     restart: always
     volumes:
       - ./:/certs
@@ -16,7 +16,7 @@ services:
       AAD_TENANT_ID: "f511a6a4-1052-44eb-aec8-182e2b604c7f"
       AAD_CLIENT_CERTIFICATE_PATH: "/certs/AuthProxyPem.pem"
   azuremonitor-query-proxy:
-    image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-05-24-2023-b911fe1c
+    image: mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-07-17-2023-841abb6f
     restart: always
     volumes:
       - ./:/certs
