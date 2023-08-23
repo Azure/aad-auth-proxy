@@ -5,7 +5,6 @@ import (
 	"aad-auth-proxy/contracts"
 	"aad-auth-proxy/utils"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httputil"
@@ -94,7 +93,7 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 			requestCountIntrument.Add(ctx, 1, metricAttributes...)
 		}
 
-		handler.failRequest(w, r, ctx, err)
+		FailRequest(w, r, http.StatusServiceUnavailable, "AuthenticationTokenNotFound", ctx, err)
 		return
 	}
 
@@ -116,7 +115,7 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 		duration := time.Since(startTime).Milliseconds()
 		status_code, err := strconv.ParseInt(w.Header().Get("Status-Code"), 10, 32)
 		if err != nil {
-			log.Errorln("Failed to parse status code", err)
+			log.Errorln("Failed to parse status code, assuming status code 0")
 			status_code = 0
 		}
 		// Record metrics
@@ -147,7 +146,7 @@ func (handler *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 	// Check token provider
 	err := handler.checkTokenProvider(ctx)
 	if err != nil {
-		handler.failRequest(w, r, ctx, err)
+		FailRequest(w, r, http.StatusServiceUnavailable, "AuthenticationTokenNotFound", ctx, err)
 		return
 	}
 
@@ -181,35 +180,4 @@ func (handler *Handler) checkTokenProvider(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// Fail request
-// This will fail the request with 503
-func (handler *Handler) failRequest(w http.ResponseWriter, r *http.Request, ctx context.Context, err error) {
-	_, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(ctx, "failRequest")
-	defer span.End()
-
-	statusCode := http.StatusServiceUnavailable
-	errorCode := "AuthenticationTokenNotFound"
-	errorMessage := err.Error()
-	requestId := r.Header.Get(constants.HEADER_REQUEST_ID)
-
-	span.SetAttributes(
-		attribute.Int("response.status_code", statusCode),
-		attribute.String("response.request_id", requestId),
-		attribute.String("response.error.code", errorCode),
-		attribute.String("response.error.message", errorMessage),
-	)
-	span.SetStatus(codes.Error, "failed to forward request")
-
-	w.WriteHeader(statusCode)
-	w.Header().Add("Content-Type", "application/json")
-	resp := make(map[string]string)
-	resp[constants.ERROR_PROPERTY_CODE] = errorCode
-	resp[constants.ERROR_PROPERTY_MESSAGE] = errorMessage
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		return
-	}
-	w.Write(jsonResp)
 }
