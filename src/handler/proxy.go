@@ -96,7 +96,8 @@ func handleError(response http.ResponseWriter, request *http.Request, err error)
 	status_code, err := strconv.ParseInt(response.Header().Get(constants.HEADER_STATUS_CODE), 10, 32)
 	if err != nil {
 		log.Errorln("Failed to parse status code", err)
-		status_code = 0
+		status_code = 500
+		response.WriteHeader(http.StatusInternalServerError)
 	}
 
 	metricAttributes := []attribute.KeyValue{
