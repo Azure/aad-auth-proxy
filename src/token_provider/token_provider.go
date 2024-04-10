@@ -69,6 +69,7 @@ func NewTokenProvider(audience string, config utils.IConfiguration, certManager 
 			return nil, errors.New("AAD params missing")
 		}
 	default:
+		logger.Info("No identity type specified, assuming default azure credential")
 		cred, err = azidentity.NewDefaultAzureCredential(nil)
 	}
 

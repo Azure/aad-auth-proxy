@@ -41,8 +41,8 @@ spec:
             - name: LISTENING_PORT
               value: {{ required "listeningPort is required" .Values.listeningPort | toString | trim | quote }}
             - name: IDENTITY_TYPE
-              value: {{ required "identityType is required, should be one of systemAssigned, userAssigned or aadApplication" .Values.identityType | toString | trim | quote }}
-            {{- if ne .Values.identityType "systemAssigned" }}
+              value: {{ .Values.identityType | toString | trim | quote }}
+            {{- if eq .Values.identityType "userAssigned" or eq .Values.identityType "aadApplication"}}
             - name: AAD_CLIENT_ID
               value: {{ required "aadClientId is required for userAssigned and aadApplication identity types" .Values.aadClientId | toString | trim | quote }}
             {{- if eq .Values.identityType "aadApplication" }}
