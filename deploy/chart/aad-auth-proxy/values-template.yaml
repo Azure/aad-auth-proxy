@@ -5,7 +5,7 @@
 listeningPort: 8081
 audience: https://prometheus.monitor.azure.com/.default
 targetHost: ""
-identityType: systemAssigned
+identityType: ""
 aadClientId: ""
 aadTenantId: ""
 aadClientCertificatePath: ""

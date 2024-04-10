@@ -21,7 +21,7 @@ Below sample command can be modified with user specific parameters and deployed 
 | Image Parameter | Helm chart Parameter name | Description | Supported values | Mandatory |
 | --------- | --------- | --------------- | --------- | --------- |
 |  TARGET_HOST | targetHost | this is the target host where you want to forward the request to. | | Yes |
-|  IDENTITY_TYPE | identityType | this is the identity type which will be used to authenticate requests. This proxy supports 3 types of identities. | systemassigned, userassigned, aadapplication | Yes |
+|  IDENTITY_TYPE | identityType | this is the identity type which will be used to authenticate requests. This proxy supports 3 types of identities. If this value is not set, it will create [DefaultAzureCredential](https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity#readme-defaultazurecredential) | systemassigned, userassigned, aadapplication | No |
 | AAD_CLIENT_ID | aadClientId | this is the client_id of the identity used. This is needed for userassigned and aadapplication identity types. Check [Fetch parameters for identities](IDENTITY.md#fetch-parameters-for-identities) on how to fetch client_id | | Yes for userassigned and aadapplication |
 | AAD_TENANT_ID | aadTenantId | this is the tenant_id of the identity used. This is needed for aadapplication identity types. Check [Fetch parameters for identities](IDENTITY.md#fetch-parameters-for-identities) on how to fetch tenant_id | | Yes for aadapplication |
 | AAD_CLIENT_CERTIFICATE_PATH | aadClientCertificatePath | this is the path where proxy can find the certificate for aadapplication. This path should be accessible by proxy and should be a either a pfx or pem certificate containing private key. Check [CSI driver](IDENTITY.md#set-up-csi-driver-for-certificate-management) for managing certificates. | | Yes for aadapplication |
@@ -34,6 +34,10 @@ Below sample command can be modified with user specific parameters and deployed 
 
 ## Liveness and readiness probes
 Proxy supports readiness and liveness probes. [Sample configuration](../samples/sample-proxy-deployment.yaml) uses these checks to monitor health of the proxy.
+
+## Default Azure credentials
+DefaultAzureCredential is intended to simplify getting started by relying on default behaviors of azidentity. Developers who want more control or whose scenario isn't served by the default settings should use other credential types by setting parameter: IDENTITY_TYPE.
+Proxy supports workload identity via [DefaultAzureCredential](https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity#readme-defaultazurecredential). [sample configuration using workload indentity via default Azure credentials](../samples/sample-proxy-using-workload-identity-default.yaml) has example configurations to make workload indetity work.
 
 ## Example scenarios
 ### [Query prometheus metrics for KEDA or Kubecost](EXAMPLE_SCENARIOS.md#query-prometheus-metrics-for-kubecost)
