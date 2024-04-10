@@ -42,16 +42,17 @@ spec:
               value: {{ required "listeningPort is required" .Values.listeningPort | toString | trim | quote }}
             - name: IDENTITY_TYPE
               value: {{ .Values.identityType | toString | trim | quote }}
-            {{- if eq .Values.identityType "userAssigned" or eq .Values.identityType "aadApplication"}}
+            {{- if eq .Values.identityType "userAssigned"}}
             - name: AAD_CLIENT_ID
-              value: {{ required "aadClientId is required for userAssigned and aadApplication identity types" .Values.aadClientId | toString | trim | quote }}
-            {{- if eq .Values.identityType "aadApplication" }}
+              value: {{ required "aadClientId is required for userAssigned identity types" .Values.aadClientId | toString | trim | quote }}
+            {{- else if eq .Values.identityType "aadApplication" }}
+            - name: AAD_CLIENT_ID
+              value: {{ required "aadClientId is required for aadApplication identity types" .Values.aadClientId | toString | trim | quote }}
             - name: AAD_TENANT_ID
               value: {{ required "aadTenantId is required for aadApplication identity type" .Values.aadTenantId | toString | trim | quote }}
             - name: AAD_CLIENT_CERTIFICATE_PATH
               value: {{ required "aadClientCertificatePath is required for aadApplication identity type" .Values.aadClientCertificatePath | toString | trim | quote }}
             {{- end}}
-            {{- end }}
             - name: AAD_TOKEN_REFRESH_INTERVAL_IN_PERCENTAGE
               value: {{ .Values.aadTokenRefreshIntervalInPercentage | toString | trim | quote }}
             - name: OTEL_SERVICE_NAME

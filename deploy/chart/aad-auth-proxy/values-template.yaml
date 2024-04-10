@@ -49,6 +49,8 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+selectorLabels: {}
+
 service:
   type: ClusterIP
   port: 80
