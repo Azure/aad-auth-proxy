@@ -19,6 +19,9 @@ spec:
       {{- end }}
       labels:
         {{- include "aad-auth-proxy.selectorLabels" . | nindent 8 }}
+        {{- if eq .Values.addWorkloadIdentityLabel "azure" }}
+        azure.workload.identity/use: "true"
+        {{- end}}
     spec:
       serviceAccountName: {{ include "aad-auth-proxy.serviceAccountName" . }}
       securityContext:

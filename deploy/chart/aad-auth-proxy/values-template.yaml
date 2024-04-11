@@ -13,6 +13,7 @@ aadTokenRefreshIntervalInPercentage: "10"
 otelServiceName: "aad_auth_proxy"
 otelGrpcEndpoint: ""
 overrideRequestHeaders: "{}"
+addWorkloadIdentityLabel: ""
 
 replicaCount: 1
 
@@ -48,8 +49,6 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
-
-selectorLabels: {}
 
 service:
   type: ClusterIP
