@@ -1,5 +1,16 @@
 # AAD Auth Proxy
 
+## Release 04-10-2024
+
+- Image: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-04-10-2024-7067ac84`
+- Helm chart: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart/aad-auth-proxy:0.1.0-main-04-10-2024-7067ac84`
+- Change log:
+  - Add DefaultAzureCredential support
+  - Add workload identity support via DefaultAzureCredential
+  - Bump github.com/Azure/azure-sdk-for-go/sdk/azcore from 1.1.1 to 1.11.0 (+ dependent packages)
+  - Bump github.com/Azure/azure-sdk-for-go/sdk/azidentity from 1.1.0 to 1.5.0  (+ dependent packages)
+  - Bump google.golang.org/protobuf from 1.30.0 to 1.33.0
+
 ## Release 01-10-2024
 
 - Image: `mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy:0.1.0-main-01-10-2024-08b31473`

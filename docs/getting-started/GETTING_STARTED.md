@@ -31,6 +31,7 @@ Below sample command can be modified with user specific parameters and deployed 
 | OTEL_SERVICE_NAME | otelServiceName | this will be set as the service name for OTEL traces and metrics. Default value is aad_auth_proxy | | No |
 | OTEL_GRPC_ENDPOINT | otelGrpcEndpoint | proxy will push OTEL telemetry to this endpoint. Default values is http://localhost:4317 | | No |
 | OVERRIDE_REQUEST_HEADERS | overrideRequestHeaders | (Experimental) proxy will override these headers while forwarding requests. This expects headers to be in JSON, example {"header1": "value1", "header2": "value2" }:  Default values is {} | | No |
+|  | addWorkloadIdentityLabel | This can be used to set metadata label 'azure.workload.identity/use:"true"' when using workload identity and deployed using helm chart, example --set addWorkloadIdentityLabel=azure  | azure | No |
 
 ## Liveness and readiness probes
 Proxy supports readiness and liveness probes. [Sample configuration](../samples/sample-proxy-deployment.yaml) uses these checks to monitor health of the proxy.
@@ -38,6 +39,13 @@ Proxy supports readiness and liveness probes. [Sample configuration](../samples/
 ## Default Azure credentials
 DefaultAzureCredential is intended to simplify getting started by relying on default behaviors of azidentity. Developers who want more control or whose scenario isn't served by the default settings should use other credential types by setting parameter: IDENTITY_TYPE.
 Proxy supports workload identity via [DefaultAzureCredential](https://pkg.go.dev/github.com/Azure/azure-sdk-for-go/sdk/azidentity#readme-defaultazurecredential). [sample configuration using workload indentity via default Azure credentials](../samples/sample-proxy-using-workload-identity-default.yaml) has example configurations to make workload indetity work.
+
+### Sample helm command for deploying proxy using helm chart with workload identity:
+
+`helm install aad-auth-proxy oci://mcr.microsoft.com/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart/aad-auth-proxy --version 0.1.0-main-04-10-2024-7067ac84 -n obs --set targetHost=https://azure-monitor-workspace.eastus.prometheus.monitor.azure.com --set audience=https://prometheus.monitor.azure.com/.default --set listeningPort=8083 --set serviceAccount.create=false --set serviceAccount.name=aad-auth-proxy-sa --set addWorkloadIdentityLabel=azure`
+
+By default when aad-auth-proxy is deployed using helm chart, it creates a service account, this can be overridden by setting service account name to an existing one, example: `--set serviceAccount.create=false --set serviceAccount.name=aad-auth-proxy-sa`.
+[Azure AD workload identity webhook](https://azure.github.io/azure-workload-identity/docs/installation/mutating-admission-webhook.html) can be used to ensure necessary properties are set.
 
 ## Example scenarios
 ### [Query prometheus metrics for KEDA or Kubecost](EXAMPLE_SCENARIOS.md#query-prometheus-metrics-for-kubecost)
