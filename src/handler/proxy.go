@@ -18,7 +18,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric"
 )
 
 // Creates proxy for incoming requests
@@ -61,10 +61,10 @@ func modifyRequest(request *http.Request, targetHost string, tokenProvider contr
 		attribute.String("user_agent", request.Header.Get(constants.HEADER_USER_AGENT)),
 	}
 
-	meter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-	intrument, err := meter.Int64Counter(constants.METRIC_REQUEST_BYTES_TOTAL)
+	meter := otel.Meter(constants.SERVICE_TELEMETRY_KEY)
+	instrument, err := meter.Int64Counter(constants.METRIC_REQUEST_BYTES_TOTAL)
 	if err == nil {
-		intrument.Add(ctx, request.ContentLength, metricAttributes...)
+		instrument.Add(ctx, request.ContentLength, metric.WithAttributes(metricAttributes...))
 	}
 }
 
@@ -107,10 +107,10 @@ func handleError(response http.ResponseWriter, request *http.Request, response_e
 		attribute.Int("status_code", int(status_code)),
 	}
 
-	requestCountMeter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-	requestCountIntrument, err := requestCountMeter.Int64Counter(constants.METRIC_REQUESTS_TOTAL)
+	requestCountMeter := otel.Meter(constants.SERVICE_TELEMETRY_KEY)
+	requestCountInstrument, err := requestCountMeter.Int64Counter(constants.METRIC_REQUESTS_TOTAL)
 	if err == nil {
-		requestCountIntrument.Add(ctx, 1, metricAttributes...)
+		requestCountInstrument.Add(ctx, 1, metric.WithAttributes(metricAttributes...))
 	}
 
 	FailRequest(response, request, int(status_code), response_err.Error(), ctx, response_err)
@@ -143,18 +143,18 @@ func modifyResponse(response *http.Response) (err error) {
 
 	// Record metrics
 	// requests_total{target_host, method, path, user_agent, status_code}
-	requestCountMeter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-	requestCountIntrument, err := requestCountMeter.Int64Counter(constants.METRIC_REQUESTS_TOTAL)
+	requestCountMeter := otel.Meter(constants.SERVICE_TELEMETRY_KEY)
+	requestCountInstrument, err := requestCountMeter.Int64Counter(constants.METRIC_REQUESTS_TOTAL)
 	if err == nil {
-		requestCountIntrument.Add(ctx, 1, metricAttributes...)
+		requestCountInstrument.Add(ctx, 1, metric.WithAttributes(metricAttributes...))
 	}
 
 	// Record metrics
 	// response_bytes_total{target_host, method, path, user_agent, status_code}
-	responseBytesMeter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-	responseBytesIntrument, err := responseBytesMeter.Int64Counter(constants.METRIC_RESPONSE_BYTES_TOTAL)
+	responseBytesMeter := otel.Meter(constants.SERVICE_TELEMETRY_KEY)
+	responseBytesInstrument, err := responseBytesMeter.Int64Counter(constants.METRIC_RESPONSE_BYTES_TOTAL)
 	if err == nil {
-		responseBytesIntrument.Add(ctx, response.ContentLength, metricAttributes...)
+		responseBytesInstrument.Add(ctx, response.ContentLength, metric.WithAttributes(metricAttributes...))
 	}
 
 	// Log response
