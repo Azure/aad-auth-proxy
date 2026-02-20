@@ -16,7 +16,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric"
 )
 
 type identity struct {
@@ -120,8 +120,8 @@ func (tokenProvider *tokenProvider) refreshAADToken() error {
 
 	// Record metrics
 	// token_refresh_total{is_success}
-	meter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-	intrument, _ := meter.Int64Counter(constants.METRIC_TOKEN_REFRESH_TOTAL)
+	meter := otel.Meter(constants.SERVICE_TELEMETRY_KEY)
+	instrument, _ := meter.Int64Counter(constants.METRIC_TOKEN_REFRESH_TOTAL)
 
 	accessToken, err := tokenProvider.credentialClient.GetToken(ctx, *tokenProvider.options)
 	if err != nil {
@@ -129,7 +129,7 @@ func (tokenProvider *tokenProvider) refreshAADToken() error {
 		span.SetAttributes(attributes...)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to refresh token")
-		intrument.Add(ctx, 1, attributes...)
+		instrument.Add(ctx, 1, metric.WithAttributes(attributes...))
 
 		// Set last error so that this can be returned back when the token is requested
 		tokenProvider.lastError = err
@@ -141,7 +141,7 @@ func (tokenProvider *tokenProvider) refreshAADToken() error {
 	tokenProvider.lastError = nil
 
 	attributes = append(attributes, attribute.Bool("is_success", true))
-	intrument.Add(ctx, 1, attributes...)
+	instrument.Add(ctx, 1, metric.WithAttributes(attributes...))
 
 	tokenProvider.setToken(ctx, accessToken.Token)
 	tokenProvider.updateRefreshDuration(accessToken)

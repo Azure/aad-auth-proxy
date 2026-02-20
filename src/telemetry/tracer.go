@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
-	"go.opentelemetry.io/otel/metric/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -64,7 +63,7 @@ func InitializeMetric(logger contracts.ILogger, configuration utils.IConfigurati
 	// Create a metric provider for otel
 	metricProvider := metric.NewMeterProvider(metricOptions...)
 
-	global.SetMeterProvider(metricProvider)
+	otel.SetMeterProvider(metricProvider)
 
 	return metricProvider.Shutdown, nil
 }

@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/metric/global"
+	"go.opentelemetry.io/otel/metric"
 )
 
 // This manages token provider handler
@@ -43,7 +43,7 @@ func NewHandler(proxy *httputil.ReverseProxy, tokenProvider contracts.ITokenProv
 
 	var overrideHeaders map[string]string = nil
 	additionalheaders := configuration.GetAdditionalHeaders()
-	if additionalheaders != nil && len(additionalheaders) > 0 {
+	if len(additionalheaders) > 0 {
 		overrideHeaders = additionalheaders
 	}
 
@@ -87,10 +87,10 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 
 		// Record metrics
 		// requests_total{target_host, method, path, user_agent, status_code}
-		requestCountMeter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-		requestCountIntrument, err := requestCountMeter.Int64Counter(constants.METRIC_REQUESTS_TOTAL)
+		requestCountMeter := otel.GetMeterProvider().Meter(constants.SERVICE_TELEMETRY_KEY)
+		requestCountInstrument, err := requestCountMeter.Int64Counter(constants.METRIC_REQUESTS_TOTAL)
 		if err == nil {
-			requestCountIntrument.Add(ctx, 1, metricAttributes...)
+			requestCountInstrument.Add(ctx, 1, metric.WithAttributes(metricAttributes...))
 		}
 
 		FailRequest(w, r, http.StatusServiceUnavailable, "AuthenticationTokenNotFound", ctx, err)
@@ -120,8 +120,8 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 		}
 		// Record metrics
 		// request_duration_milliseconds{target_host, method, path, user_agent, status_code}
-		requestDurationMeter := global.Meter(constants.SERVICE_TELEMETRY_KEY)
-		requestDurationIntrument, err := requestDurationMeter.Int64Histogram(constants.METRIC_REQUEST_DURATION_MILLISECONDS)
+		requestDurationMeter := otel.GetMeterProvider().Meter(constants.SERVICE_TELEMETRY_KEY)
+		requestDurationInstrument, err := requestDurationMeter.Int64Histogram(constants.METRIC_REQUEST_DURATION_MILLISECONDS)
 		if err == nil {
 			metricAttributes := []attribute.KeyValue{
 				attribute.String("target_host", handler.targetHost),
@@ -130,7 +130,7 @@ func (handler *Handler) ProxyRequest(w http.ResponseWriter, r *http.Request) {
 				attribute.String("user_agent", r.Header.Get("User-Agent")),
 				attribute.Int("status_code", int(status_code)),
 			}
-			requestDurationIntrument.Record(ctx, duration, metricAttributes...)
+			requestDurationInstrument.Record(ctx, duration, metric.WithAttributes(metricAttributes...))
 		}
 	}()
 
