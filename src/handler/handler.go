@@ -158,25 +158,27 @@ func (handler *Handler) ReadinessCheck(w http.ResponseWriter, r *http.Request) {
 // If token provider is not instantiated, cannot fetch token, so fail request
 func (handler *Handler) checkTokenProvider(ctx context.Context) error {
 	if handler.tokenProvider == nil {
-		token, err := handler.tokenProvider.GetAccessToken()
-		if len(token) == 0 || err != nil {
-			// Start tracing
-			_, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(ctx, "checkTokenProvider")
-			defer span.End()
+		return errors.New("handler, tokenProvider is not instantiated, cannot forward request")
+	}
+		
+	token, err := handler.tokenProvider.GetAccessToken()
+	if len(token) == 0 || err != nil {
+		// Start tracing
+		_, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(ctx, "checkTokenProvider")
+		defer span.End()
 
-			// If we run into a case where we received empty token without any errors
-			if err == nil {
-				err = errors.New("handler, tokenProvider is not instantiated, cannot forward request")
-			}
-
-			span.SetAttributes(attribute.Int("proxy.status_code", http.StatusServiceUnavailable))
-			span.RecordError(err)
-			span.SetStatus(codes.Error, "failed to forward request")
-
-			log.Errorln("failed to forward request", err)
-
-			return err
+		// If we run into a case where we received empty token without any errors
+		if err == nil {
+			err = errors.New("handler, empty token found, cannot forward request")
 		}
+
+		span.SetAttributes(attribute.Int("proxy.status_code", http.StatusServiceUnavailable))
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to forward request")
+
+		log.Errorln("failed to forward request", err)
+
+		return err
 	}
 
 	return nil
