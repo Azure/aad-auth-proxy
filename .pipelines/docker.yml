@@ -1,0 +1,52 @@
+variables:
+  - name: "ContainerName"
+    value: aad-auth-proxy
+
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+  - bash: |
+      short_hash=`git rev-parse --short=7 HEAD`
+      echo ""
+      echo -e "Full git commit \e[34m$(Build.SourceVersion)\e[39m abbreviated to \e[33m$short_hash\e[39m"
+      echo "##vso[task.setvariable variable=CommitHash]$short_hash"
+    workingDirectory: $(Build.SourcesDirectory)/src
+    displayName: Set CommitHash
+
+  - task: GoTool@0
+    displayName: "Build: specify golang version"
+    inputs:
+      version: '1.26'
+
+  - task: Go@0
+    displayName: "Build: restore Go modules"
+    inputs:
+      command: custom
+      customCommand: 'mod'
+      arguments: 'download'
+      workingDirectory: '$(Build.SourcesDirectory)/src'
+
+  - task: Go@0
+    displayName: "Build: compile aad-auth-proxy"
+    inputs:
+      command: 'build'
+      arguments: '-o main -ldflags "-w -s -v"'
+      workingDirectory: '$(Build.SourcesDirectory)/src'
+    env:
+      CGO_ENABLED: '0'
+
+
+  - bash: |
+      tar cvf aad-auth-proxy.tar main
+
+      if [ $? != 0 ]; then
+        printf "Error packing: aad-auth-proxy.tar"
+        exit 1
+      fi
+    workingDirectory: $(Build.SourcesDirectory)/src
+    displayName: "Package aad-auth-proxy binary for docker build"
