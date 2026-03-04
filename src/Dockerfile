@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/oss/busybox/busybox:1.33.1 as builder
+FROM mcr.microsoft.com/cbl-mariner/busybox:1.35 AS builder
 
 FROM mcr.microsoft.com/cbl-mariner/distroless/minimal:2.0
 
