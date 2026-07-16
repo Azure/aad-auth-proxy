@@ -1,0 +1,146 @@
+trigger: none
+pr: none
+
+parameters:
+- name: azureServiceConnection
+  displayName: Azure service connection
+  type: string
+  default: ''
+- name: acrName
+  displayName: Azure Container Registry name
+  type: string
+  default: ''
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+variables:
+  HELM_CHART_NAME: 'aad-auth-proxy'
+  ACR_NAME: ${{ parameters.acrName }}
+  ACR_REGISTRY: ${{ format('{0}.azurecr.io', parameters.acrName) }}
+  ACR_REPOSITORY: '/public/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy'
+  ACR_REPOSITORY_HELM: '/public/azuremonitor/auth-proxy/prod/aad-auth-proxy/helmchart'
+  MCR_REGISTRY: 'mcr.microsoft.com'
+  MCR_REPOSITORY: '/azuremonitor/auth-proxy/prod/aad-auth-proxy/images/aad-auth-proxy'
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: nbla.core.pool.00
+      image: nbla.core.mariner
+      os: linux
+    sdl:
+      sourceAnalysisPool:
+        name: nbla.core.pool.00
+        image: nbla.core.win2022
+        os: windows
+    stages:
+    - stage: BuildAndPush
+      displayName: Build and push to team ACR
+      jobs:
+      - job: BuildAndPush
+        displayName: Build and push to team ACR
+        steps:
+        - bash: |
+            BRANCH_NAME=$(Build.SourceBranch)
+            BRANCH_NAME=${BRANCH_NAME#refs/heads/}
+            BRANCH_NAME=$(echo $BRANCH_NAME | tr / - | tr . - | tr _ - | cut -c1-90)
+            COMMIT_SHA=$(echo $(Build.SourceVersion) | cut -b -8)
+            DATE=$(TZ=America/Los_Angeles date +%m-%d-%Y)
+            VERSION=$(cat $(Build.SourcesDirectory)/VERSION)
+            SEMVER=$VERSION-$BRANCH_NAME-$DATE-$COMMIT_SHA
+
+            IMAGE_TAG=$SEMVER
+            FULL_IMAGE_NAME=$ACR_REGISTRY$ACR_REPOSITORY:$IMAGE_TAG
+            HELM_FULL_IMAGE_NAME=$ACR_REGISTRY$ACR_REPOSITORY_HELM/$HELM_CHART_NAME:$SEMVER
+
+            echo "##vso[build.updatebuildnumber]$SEMVER"
+            echo "##vso[task.setvariable variable=SEMVER]$SEMVER"
+            echo "##vso[task.setvariable variable=IMAGE_TAG]$IMAGE_TAG"
+            echo "##vso[task.setvariable variable=FULL_IMAGE_NAME]$FULL_IMAGE_NAME"
+            echo "##vso[task.setvariable variable=HELM_FULL_IMAGE_NAME]$HELM_FULL_IMAGE_NAME"
+          displayName: 'Build: set image registry, repo, and tags'
+
+        - task: GoTool@0
+          displayName: 'Build: specify golang version'
+          inputs:
+            version: '1.19'
+
+        - bash: |
+            echo Building and compiling aad-auth-proxy
+            mkdir -p $(Build.SourcesDirectory)/go19/
+            wget -nv -c https://go.dev/dl/go1.19.3.linux-amd64.tar.gz
+            tar -C $(Build.SourcesDirectory)/go19 -xzf go1.19.3.linux-amd64.tar.gz
+            export PATH=$PATH:$(Build.SourcesDirectory)/go19/bin
+            export GOBIN=$(Build.SourcesDirectory)/go19/bin
+
+            cd ./src/
+            go get -v -t -d
+            env CGO_ENABLED=0 go build -o main -ldflags "-w -s -v"
+            tar cvf aad-auth-proxy.tar main
+          workingDirectory: $(Build.SourcesDirectory)
+          displayName: 'Build: compile aad-auth-proxy'
+
+        - task: AzureCLI@2
+          displayName: 'Build: build and push image to team ACR'
+          inputs:
+            azureSubscription: ${{ parameters.azureServiceConnection }}
+            scriptType: bash
+            scriptLocation: inlineScript
+            workingDirectory: $(Build.SourcesDirectory)/src
+            inlineScript: |
+              set -euo pipefail
+
+              az acr login --name $(ACR_NAME)
+
+              mkdir -p $(Build.ArtifactStagingDirectory)/build
+              docker buildx create --name aadauthproxybuilder-$(Build.BuildId) --use
+              docker buildx build . \
+                --file ./Dockerfile \
+                --tag $(FULL_IMAGE_NAME) \
+                --metadata-file $(Build.ArtifactStagingDirectory)/build/metadata.json \
+                --push
+
+        - bash: |
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+            trivy image --ignore-unfixed --no-progress --severity HIGH,CRITICAL,MEDIUM --exit-code 1 $(FULL_IMAGE_NAME)
+          workingDirectory: $(Build.SourcesDirectory)
+          displayName: 'Build: run trivy scan'
+
+        - task: HelmInstaller@1
+          displayName: 'Build: install Helm version'
+          inputs:
+            helmVersionToInstall: '3.19.2'
+
+        - bash: |
+            export HELM_SEMVER=$(SEMVER)
+            export IMAGE_TAG=$(IMAGE_TAG)
+            envsubst < $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/Chart-template.yaml > $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/Chart.yaml
+            envsubst < $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/values-template.yaml > $(Build.SourcesDirectory)/deploy/chart/aad-auth-proxy/values.yaml
+            helm package ./aad-auth-proxy/
+          workingDirectory: $(Build.SourcesDirectory)/deploy/chart/
+          displayName: 'Build: package helm chart'
+
+        - task: AzureCLI@2
+          displayName: 'Build: push helm chart to team ACR'
+          inputs:
+            azureSubscription: ${{ parameters.azureServiceConnection }}
+            scriptType: bash
+            scriptLocation: inlineScript
+            workingDirectory: $(Build.SourcesDirectory)/deploy/chart/
+            inlineScript: |
+              set -euo pipefail
+
+              ACCESS_TOKEN=$(az acr login --name $(ACR_NAME) --expose-token --output tsv --query accessToken)
+              echo "$ACCESS_TOKEN" | helm registry login $(ACR_REGISTRY) \
+                -u 00000000-0000-0000-0000-000000000000 \
+                --password-stdin
+
+              helm push $(HELM_CHART_NAME)-$(SEMVER).tgz oci://$(ACR_REGISTRY)$(ACR_REPOSITORY_HELM)
+              mkdir -p $(Build.ArtifactStagingDirectory)/chart
+              echo {\"image.name\":\"$(HELM_FULL_IMAGE_NAME)\"} > $(Build.ArtifactStagingDirectory)/chart/metadata.json

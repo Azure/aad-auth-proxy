@@ -26,6 +26,7 @@ bld/
 [Ll]og/
 *.exe
 *.tgz
+infra/acr/main.json
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
