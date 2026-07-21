@@ -10,6 +10,26 @@ parameters:
   displayName: Azure Container Registry name
   type: string
   default: ''
+- name: poolName
+  displayName: 1ES pool name
+  type: string
+- name: poolImage
+  displayName: 1ES pool image
+  type: string
+- name: poolOs
+  displayName: 1ES pool OS
+  type: string
+  default: 'linux'
+- name: sdlPoolName
+  displayName: 1ES SDL source-analysis pool name
+  type: string
+- name: sdlPoolImage
+  displayName: 1ES SDL source-analysis pool image
+  type: string
+- name: sdlPoolOs
+  displayName: 1ES SDL source-analysis pool OS
+  type: string
+  default: 'windows'
 
 resources:
   repositories:
@@ -31,14 +51,14 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool:
-      name: nbla.core.pool.00
-      image: nbla.core.mariner
-      os: linux
+      name: ${{ parameters.poolName }}
+      image: ${{ parameters.poolImage }}
+      os: ${{ parameters.poolOs }}
     sdl:
       sourceAnalysisPool:
-        name: nbla.core.pool.00
-        image: nbla.core.win2022
-        os: windows
+        name: ${{ parameters.sdlPoolName }}
+        image: ${{ parameters.sdlPoolImage }}
+        os: ${{ parameters.sdlPoolOs }}
     stages:
     - stage: BuildAndPush
       displayName: Build and push to team ACR
