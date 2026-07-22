@@ -1,0 +1,132 @@
+# Provisions the aad-auth-proxy Azure Container Registry (and its resource group)
+# by deploying infra/acr/main.bicep at subscription scope.
+#
+# This replaces the manual `az deployment sub create` flow documented in
+# infra/acr/README.md. It is intentionally manual-only (trigger: none) because it
+# mutates subscription-level infrastructure; gate it behind an environment with
+# approvals when wiring it up to a real Azure DevOps project.
+#
+# Prerequisites (configured in Azure DevOps, not in this repo):
+#   - An ARM service connection (workload identity federation recommended) whose
+#     identity has at least Contributor on the target subscription. Pass its name
+#     via the `azureServiceConnection` parameter. If the template is later extended
+#     to create role assignments, the identity also needs User Access Administrator.
+#   - A variable group (linked to Key Vault) that exposes
+#     AAD_AUTH_PROXY_ACR_NETWORK_RULE_IPS = comma-separated trusted build-pool
+#     egress CIDRs. These are deliberately NOT committed to this public repo.
+
+trigger: none
+pr: none
+
+parameters:
+- name: azureServiceConnection
+  displayName: Azure service connection
+  type: string
+  default: ''
+- name: acrLocation
+  displayName: Azure region for the resource group and ACR
+  type: string
+  default: 'westus'
+- name: acrResourceGroupName
+  displayName: Resource group name to create for the ACR
+  type: string
+  default: ''
+- name: acrName
+  displayName: Azure Container Registry name (alphanumeric, globally unique)
+  type: string
+  default: ''
+- name: acrNetworkRuleIpsVariableGroup
+  displayName: Variable group exposing AAD_AUTH_PROXY_ACR_NETWORK_RULE_IPS
+  type: string
+  default: 'aad-auth-proxy-acr-secrets'
+- name: poolName
+  displayName: 1ES pool name
+  type: string
+- name: poolImage
+  displayName: 1ES pool image
+  type: string
+- name: poolOs
+  displayName: 1ES pool OS
+  type: string
+  default: 'linux'
+- name: sdlPoolName
+  displayName: 1ES SDL source-analysis pool name
+  type: string
+- name: sdlPoolImage
+  displayName: 1ES SDL source-analysis pool image
+  type: string
+- name: sdlPoolOs
+  displayName: 1ES SDL source-analysis pool OS
+  type: string
+  default: 'windows'
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: ${{ parameters.poolName }}
+      image: ${{ parameters.poolImage }}
+      os: ${{ parameters.poolOs }}
+    sdl:
+      sourceAnalysisPool:
+        name: ${{ parameters.sdlPoolName }}
+        image: ${{ parameters.sdlPoolImage }}
+        os: ${{ parameters.sdlPoolOs }}
+    stages:
+    - stage: ProvisionACR
+      displayName: Provision Azure Container Registry
+      jobs:
+      - job: DeployBicep
+        displayName: Deploy infra/acr/main.bicep
+        variables:
+        - group: ${{ parameters.acrNetworkRuleIpsVariableGroup }}
+        steps:
+        - task: AzureCLI@2
+          displayName: 'ACR: preview changes (what-if)'
+          inputs:
+            azureSubscription: ${{ parameters.azureServiceConnection }}
+            scriptType: bash
+            scriptLocation: inlineScript
+            workingDirectory: $(Build.SourcesDirectory)
+            inlineScript: |
+              set -euo pipefail
+
+              : "${AAD_AUTH_PROXY_ACR_NETWORK_RULE_IPS:?Set AAD_AUTH_PROXY_ACR_NETWORK_RULE_IPS via the linked variable group}"
+
+              export AAD_AUTH_PROXY_ACR_LOCATION='${{ parameters.acrLocation }}'
+              export AAD_AUTH_PROXY_ACR_RESOURCE_GROUP_NAME='${{ parameters.acrResourceGroupName }}'
+              export AAD_AUTH_PROXY_ACR_NAME='${{ parameters.acrName }}'
+
+              az deployment sub what-if \
+                --location "$AAD_AUTH_PROXY_ACR_LOCATION" \
+                --template-file infra/acr/main.bicep \
+                --parameters infra/acr/main.bicepparam
+
+        - task: AzureCLI@2
+          displayName: 'ACR: create deployment'
+          inputs:
+            azureSubscription: ${{ parameters.azureServiceConnection }}
+            scriptType: bash
+            scriptLocation: inlineScript
+            workingDirectory: $(Build.SourcesDirectory)
+            inlineScript: |
+              set -euo pipefail
+
+              : "${AAD_AUTH_PROXY_ACR_NETWORK_RULE_IPS:?Set AAD_AUTH_PROXY_ACR_NETWORK_RULE_IPS via the linked variable group}"
+
+              export AAD_AUTH_PROXY_ACR_LOCATION='${{ parameters.acrLocation }}'
+              export AAD_AUTH_PROXY_ACR_RESOURCE_GROUP_NAME='${{ parameters.acrResourceGroupName }}'
+              export AAD_AUTH_PROXY_ACR_NAME='${{ parameters.acrName }}'
+
+              az deployment sub create \
+                --location "$AAD_AUTH_PROXY_ACR_LOCATION" \
+                --name "aad-auth-proxy-acr-$(Build.BuildId)" \
+                --template-file infra/acr/main.bicep \
+                --parameters infra/acr/main.bicepparam
