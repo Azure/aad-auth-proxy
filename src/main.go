@@ -91,18 +91,20 @@ func createHandlerWithTokenProvider(configuration utils.IConfiguration, audience
 		}
 	}
 
-	// Create TokenProvider
-	tokenProvider, err := token_provider.NewTokenProvider(audience, configuration, certManager, logger)
+	hostAudience := configuration.GetHostAudienceMap()
+
+	tokenProvider, err := token_provider.NewHostTokenProvider(audience, hostAudience, configuration, certManager, logger)
 	if err != nil {
-		logger.Error("TokenCredential creation failed:", err)
+		logger.Error("HostTokenProvider creation failed:", err)
+		return nil
 	}
 
 	proxy, err := handler.CreateReverseProxy(targetHost, tokenProvider)
 	if err != nil {
 		logger.Error("Proxy creation failed:", err)
+		return nil
 	}
 
-	// Create handler to return tokens based on audience
 	handler, err := handler.NewHandler(proxy, tokenProvider, configuration)
 	if err != nil {
 		logger.Error("NewHandler failed:", err)

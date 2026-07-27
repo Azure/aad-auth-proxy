@@ -22,6 +22,7 @@ type IConfiguration interface {
 	GetOtelEndpoint() string
 	GetOtelServiceName() string
 	GetAdditionalHeaders() map[string]string
+	GetHostAudienceMap() map[string]string
 }
 
 type configuration struct {
@@ -231,4 +232,17 @@ func (config *configuration) GetOtelServiceName() string {
 
 func (config *configuration) GetAdditionalHeaders() map[string]string {
 	return config.additionalHeaders.headers
+}
+
+func (c *configuration) GetHostAudienceMap() map[string]string {
+	raw := os.Getenv("HOST_AUDIENCE_MAP")
+	if raw == "" {
+		return map[string]string{}
+	}
+
+	out := map[string]string{}
+	if err := json.Unmarshal([]byte(raw), &out); err != nil {
+		return map[string]string{}
+	}
+	return out
 }

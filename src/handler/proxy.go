@@ -4,6 +4,7 @@ import (
 	"aad-auth-proxy/constants"
 	"aad-auth-proxy/contracts"
 	"aad-auth-proxy/utils"
+	"aad-auth-proxy/routing"
 	"bytes"
 	"context"
 	"errors"
@@ -13,6 +14,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel"
@@ -22,16 +24,36 @@ import (
 )
 
 // Creates proxy for incoming requests
-func CreateReverseProxy(targetHost string, tokenProvider contracts.ITokenProvider) (*httputil.ReverseProxy, error) {
+func CreateReverseProxy(targetHost string, tokenProvider contracts.IHostTokenProvider) (*httputil.ReverseProxy, error) {
 	url, err := url.Parse(targetHost)
 	if err != nil {
 		return nil, err
 	}
 	proxy := httputil.NewSingleHostReverseProxy(url)
 
-	proxy.Director = func(request *http.Request) {
-		modifyRequest(request, targetHost, tokenProvider)
+	proxy.Director = func(req *http.Request) {
+		host, err := routing.BuildTargetHost(req)
+		if err != nil {
+			req.URL = nil
+			return
+		}
+
+		if err := modifyRequest(req, host, tokenProvider); err != nil {
+			req.URL = nil
+			return
+		}
+
+		// strip first path segment (/app1/xyz → /xyz)
+		path := req.URL.Path
+		segments := strings.SplitN(path, "/", 3)
+
+		if len(segments) >= 3 {
+			req.URL.Path = "/" + segments[2]
+		} else {
+			req.URL.Path = "/"
+		}
 	}
+
 	proxy.ErrorHandler = handleError
 	proxy.ModifyResponse = modifyResponse
 
@@ -39,7 +61,7 @@ func CreateReverseProxy(targetHost string, tokenProvider contracts.ITokenProvide
 }
 
 // This modifies incoming requests and changes host to targetHost
-func modifyRequest(request *http.Request, targetHost string, tokenProvider contracts.ITokenProvider) {
+func modifyRequest(request *http.Request, targetHost string, tokenProvider contracts.IHostTokenProvider) error {
 	ctx, span := otel.Tracer(constants.SERVICE_TELEMETRY_KEY).Start(request.Context(), "modifyRequest")
 	defer span.End()
 
@@ -51,6 +73,14 @@ func modifyRequest(request *http.Request, targetHost string, tokenProvider contr
 	request.URL.Scheme = constants.HTTPS_SCHEME
 	request.URL.Host = targetHost
 	request.Host = targetHost
+
+	token, err := tokenProvider.GetTokenForHost(targetHost)
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to get token for host")
+		return err
+	}
+	request.Header.Set(constants.HEADER_AUTHORIZATION, "Bearer "+token)
 
 	// Record metrics
 	// request_bytes_total{target_host, method, path, user_agent}
@@ -66,6 +96,9 @@ func modifyRequest(request *http.Request, targetHost string, tokenProvider contr
 	if err == nil {
 		instrument.Add(ctx, request.ContentLength, metric.WithAttributes(metricAttributes...))
 	}
+
+	// metrics, log, ecc.
+	return nil
 }
 
 // This will be called when there is an error in forwarding the request
@@ -212,3 +245,5 @@ func logResponse(ctx context.Context, response *http.Response) {
 	response.Header.Set(constants.HEADER_CONTENT_LENGTH, fmt.Sprint(buffer.Len()))
 	response.Header.Set(constants.HEADER_CONTENT_ENCODING, encoding)
 }
+
+
